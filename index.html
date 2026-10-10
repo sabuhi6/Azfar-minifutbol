@@ -53,6 +53,8 @@ select{font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(-
 .pos{font-size:11px;font-weight:700;opacity:.75;margin-left:2px}
 .gkrow{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px;font-size:13px;color:var(--mute)}
 .gkrow select{width:100%;margin-top:4px}
+.rt{margin-top:10px;font-size:14px;border-top:1px solid var(--line);padding-top:8px}
+.rrow{display:flex;justify-content:space-between;align-items:center;margin:6px 0}
 </style>
 </head>
 <body>
@@ -92,6 +94,7 @@ function init(){
   var db=DB=mkDb();S={players:[],matches:[]};
   db.collection('players').onSnapshot(function(q){var l=q.docs.map(function(d){var x=d.data();return{id:d.id,n:x.name,t:x.t||0}}).sort(function(a,b){return a.t-b.t});S.players=l.map(function(x){return x.n});PID={};POS={};TS={};l.forEach(function(x){PID[x.n]=x.id;POS[x.n]=x.p||'';TS[x.n]=x.t});render()});
   db.collection('matches').onSnapshot(function(q){S.matches=q.docs.map(function(d){var x=d.data();x.id=d.id;return x}).sort(function(a,b){return a.date<b.date?1:a.date>b.date?-1:(b.t||0)-(a.t||0)});render()});
+  db.collection('votes').onSnapshot(function(q){VT=q.docs.map(function(d){var x=d.data();return{id:d.id,m:x.m,r:x.r,v:x.v}});render()});
   poll();setInterval(poll,8000);
 }
 function today(){var d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
@@ -100,6 +103,45 @@ function fmt(d){var p=d.split('-');return p[2]+'.'+p[1]+'.'+p[0]}
 function tab(n){T=n;for(var i=1;i<=3;i++){document.getElementById('v'+i).hidden=i!==n;document.getElementById('t'+i).className=i===n?'on':''}render()}
 function cnt(t){return Object.keys(D.sel).filter(function(k){return D.sel[k]===t}).length}
 function addPlayer(){var i=document.getElementById('np'),n=i.value.trim();if(!n||S.players.indexOf(n)>-1)return;if(DB){DB.collection('players').doc('p'+Date.now()).set({name:n,t:Date.now()})}else{S.players.push(n);save();render()}i.value='';document.getElementById('np').focus()}
+var VT=[],ME='',VD=null;try{ME=localStorage.getItem('mfme')||''}catch(e){}
+var VH=24;
+function vopen(m){return m.vote==='open'&&(!m.vend||Date.now()<m.vend)}
+function vclosed(m){return m.vote==='closed'||(m.vote==='open'&&!!m.vend&&Date.now()>=m.vend)}
+function hhmm(ts){var d=new Date(ts),p=function(n){return String(n).padStart(2,'0')};return p(d.getDate())+'.'+p(d.getMonth()+1)+' '+p(d.getHours())+':'+p(d.getMinutes())}
+function winners(m){var c={},mx=0;VT.filter(function(x){return x.m===m.id}).forEach(function(x){c[x.v]=(c[x.v]||0)+1});Object.keys(c).forEach(function(n){if(c[n]>mx)mx=c[n]});return{c:c,mx:mx,w:Object.keys(c).filter(function(n){return c[n]===mx})}}
+function rr(){if(document.activeElement&&document.activeElement.blur)document.activeElement.blur();render()}
+function setMe(v){ME=v;try{localStorage.setItem('mfme',v)}catch(e){}VD=null;rr()}
+function setVote(id,st){var m=S.matches.filter(function(x){return x.id===id})[0];if(!m||!DB)return;var d=Object.assign({},m);delete d.id;d.vote=st;if(st==='open'&&VH>0)d.vend=Date.now()+VH*3600000;else delete d.vend;DB.collection('matches').doc(id).set(d)}
+function openVote(id){var m=S.matches.filter(function(x){return x.id===id})[0];if(!m)return;VD={mid:id,list:m.A.concat(m.B).filter(function(n){return n!==ME}),pick:-1};rr()}
+function pickV(i){VD.pick=i;rr()}
+function sendVote(){
+  if(!VD||VD.pick<0)return alert('Əvvəlcə oyunçu seçin');
+  if(!confirm('Səs göndərildikdən sonra dəyişmək olmur. Göndərək?'))return;
+  fetch(CFG.url+'/rest/v1/items',{method:'POST',headers:H(),body:JSON.stringify({col:'votes',id:VD.mid+'__'+ME,data:{m:VD.mid,r:ME,v:VD.list[VD.pick],t:Date.now()}})}).then(function(r){if(r.status===409)alert('Siz bu oyunda artıq səs vermisiniz.');else if(!r.ok)alert('Göndərmək alınmadı. Yenidən cəhd edin.');VD=null;rr();poll()}).catch(function(){alert('Bağlantı xətası')})
+}
+function meBar(){
+  if(!DB||!S.players.length)return'';
+  if(ME&&S.players.indexOf(ME)>-1)return'<div class="cnt" style="margin-bottom:10px"><span>Siz: <b>'+esc(ME)+'</b></span><button class="ghost" onclick="setMe(\'\')">Dəyiş</button></div>';
+  return'<div class="card"><b>Siz kimsiniz?</b><p class="empty">Səs vermək üçün adınızı seçin. Bu telefonda yadda qalır.</p><select style="width:100%" onchange="setMe(this.value)"><option value="">Adınızı seçin</option>'+S.players.map(function(n){return'<option>'+esc(n)+'</option>'}).join('')+'</select></div>'
+}
+function voteBlock(m){
+  if(!DB)return'';
+  var all=m.A.concat(m.B),vs=VT.filter(function(x){return x.m===m.id}),h='',mine=vs.filter(function(x){return x.r===ME})[0],w=winners(m);
+  if(vclosed(m)){
+    if(!vs.length)h+='<div class="rt">Səs verilməyib.</div>';
+    else h+='<div class="rt"><b>Oyunun ən yaxşısı: '+w.w.map(esc).join(', ')+'</b> ('+w.mx+' səs)'+Object.keys(w.c).sort(function(x,y){return w.c[y]-w.c[x]}).map(function(n){return'<div class="rrow"><span>'+esc(n)+'</span><b>'+w.c[n]+'</b></div>'}).join('')+'</div>';
+  }else if(vopen(m)){
+    h+='<div class="rt"><b>Səsvermə açıqdır</b> ('+vs.length+' nəfər səs verib'+(m.vend?', '+hhmm(m.vend)+'-də bağlanır':'')+')';
+    if(ME&&all.indexOf(ME)>-1){
+      if(mine)h+='<p class="empty">Siz səs vermisiniz.</p>';
+      else if(VD&&VD.mid===m.id)h+='<p class="empty">Ən yaxşı oyunçunu seçin:</p><div class="chips">'+VD.list.map(function(n,i){return'<button class="chip'+(VD.pick===i?' A':'')+'" onclick="pickV('+i+')">'+esc(n)+'</button>'}).join('')+'</div><button class="btn full" onclick="sendVote()">Səs ver</button><button class="ghost" style="width:100%;margin-top:6px" onclick="VD=null;rr()">Ləğv et</button>';
+      else h+='<button class="btn full" onclick="openVote(\''+m.id+'\')">Ən yaxşı oyunçuya səs ver</button>';
+    }else if(!ME)h+='<p class="empty">Səs vermək üçün yuxarıda adınızı seçin.</p>';
+    h+='</div>';
+  }
+  if(adm()){var op=vopen(m);h+='<div style="text-align:right;margin-top:6px">'+(op?'<button class="ghost" onclick="setVote(\''+m.id+'\',\'closed\')">Səsvermə bağla</button>':'<select onchange="VH=+this.value;rr()">'+[[0,'Müddətsiz'],[1,'1 saat'],[3,'3 saat'],[6,'6 saat'],[12,'12 saat'],[24,'24 saat'],[48,'48 saat'],[72,'72 saat']].map(function(o){return'<option value="'+o[0]+'"'+(VH===o[0]?' selected':'')+'>'+o[1]+'</option>'}).join('')+'</select><button class="ghost" onclick="setVote(\''+m.id+'\',\'open\')">'+(vclosed(m)?'Yenidən aç':'Səsvermə aç')+'</button>')+'</div>'}
+  return h;
+}
 function stOpts(){var u={};S.matches.forEach(function(m){if(m.st)u[m.st]=1});return Object.keys(u).map(function(k){return'<option value="'+esc(k)+'">'}).join('')}
 function gkSel(t){var l=S.players.filter(function(n){return D.sel[n]===t}).concat((t==='A'?D.keepA:D.keepB)||[]);var v=t==='A'?D.gkA:D.gkB;return '<select onchange="D.gk'+t+'=this.value"><option value="">—</option>'+l.map(function(n){return'<option'+(n===v?' selected':'')+' value="'+esc(n)+'">'+esc(n)+'</option>'}).join('')+'</select>'}
 function cyc(i){var n=S.players[i],c=D.sel[n];if(EM){if(DB&&PID[n]){var nx=PL[(PL.indexOf(POS[n]||'')+1)%PL.length];DB.collection('players').doc(PID[n]).set({name:n,t:TS[n],p:nx})}return}if(!c)D.sel[n]='A';else if(c==='A')D.sel[n]='B';else delete D.sel[n];render()}
@@ -107,13 +149,13 @@ function rmPlayer(i){var n=S.players[i];delete D.sel[n];if(DB&&PID[n])DB.collect
 function saveMatch(){
   var A=[],B=[];S.players.forEach(function(n){if(D.sel[n]==='A')A.push(n);if(D.sel[n]==='B')B.push(n)});
   if(D.a===''||D.b==='')return alert('Hesabı yazın');
-  var gA=A.concat(D.keepA||[]).indexOf(D.gkA)>-1?D.gkA:'',gB=B.concat(D.keepB||[]).indexOf(D.gkB)>-1?D.gkB:'',tt=D.t||Date.now(),m={date:D.date,A:A.concat(D.keepA||[]),B:B.concat(D.keepB||[]),a:+D.a,b:+D.b,gkA:gA,gkB:gB,st:(D.st||'').trim(),h:D.h||'',t:tt},id=D.editId||'m'+tt;if(DB)DB.collection('matches').doc(id).set(m);else{m.id=id;S.matches.unshift(m);save()}
+  var gA=A.concat(D.keepA||[]).indexOf(D.gkA)>-1?D.gkA:'',gB=B.concat(D.keepB||[]).indexOf(D.gkB)>-1?D.gkB:'',tt=D.t||Date.now(),m={date:D.date,A:A.concat(D.keepA||[]),B:B.concat(D.keepB||[]),a:+D.a,b:+D.b,gkA:gA,gkB:gB,st:(D.st||'').trim(),h:D.h||'',t:tt},id=D.editId||'m'+tt;if(D.vote)m.vote=D.vote;if(D.vend)m.vend=D.vend;if(DB)DB.collection('matches').doc(id).set(m);else{m.id=id;S.matches.unshift(m);save()}
   D={date:today(),sel:{},a:'',b:'',st:m.st,h:m.h};tab(2)
 }
-function editMatch(id){var m=S.matches.filter(function(x){return x.id===id})[0];if(!m)return;D={date:m.date,sel:{},a:m.a,b:m.b,editId:id,t:m.t,gkA:m.gkA||'',gkB:m.gkB||'',st:m.st||'',h:m.h||'',keepA:m.A.filter(function(n){return S.players.indexOf(n)<0}),keepB:m.B.filter(function(n){return S.players.indexOf(n)<0})};m.A.forEach(function(n){D.sel[n]='A'});m.B.forEach(function(n){D.sel[n]='B'});tab(1);window.scrollTo(0,0)}
+function editMatch(id){var m=S.matches.filter(function(x){return x.id===id})[0];if(!m)return;D={date:m.date,sel:{},a:m.a,b:m.b,editId:id,t:m.t,gkA:m.gkA||'',gkB:m.gkB||'',st:m.st||'',h:m.h||'',vote:m.vote,vend:m.vend,keepA:m.A.filter(function(n){return S.players.indexOf(n)<0}),keepB:m.B.filter(function(n){return S.players.indexOf(n)<0})};m.A.forEach(function(n){D.sel[n]='A'});m.B.forEach(function(n){D.sel[n]='B'});tab(1);window.scrollTo(0,0)}
 function cancelEdit(){D={date:today(),sel:{},a:'',b:''};tab(2)}
 function delMatch(id){if(askDel!==id){askDel=id;return render()}askDel=null;if(DB)DB.collection('matches').doc(id).delete();else{S.matches=S.matches.filter(function(m){return m.id!==id});save();render()}}
-function render(){document.getElementById('t1').textContent=adm()?'Yeni oyun':'Admin girişi';
+function render(){document.getElementById('t1').textContent=adm()?'Yeni oyun':'Admin girişi';if(T===2&&document.activeElement&&document.activeElement.tagName==='SELECT')return;
   if(T===1&&!adm()){if(!document.getElementById('le'))document.getElementById('v1').innerHTML='<div class="card"><h2>Admin girişi</h2><p class="empty">Oyun əlavə etmək və düzəltmək üçün daxil olun.</p><input id="le" type="email" placeholder="E-poçt" style="width:100%"><input id="lp" type="password" placeholder="Parol" style="width:100%;margin-top:8px" onkeydown="if(event.key===\'Enter\')login()"><button class="btn full" onclick="login()">Daxil ol</button></div>'}
   else if(T===1){
     var h='<div class="card"><h2>Oyunçular</h2><div class="row"><input id="np" placeholder="Oyunçunun adı" onkeydown="if(event.key===\'Enter\')addPlayer()"><button class="btn" onclick="addPlayer()">Əlavə et</button></div>';
@@ -126,14 +168,15 @@ function render(){document.getElementById('t1').textContent=adm()?'Yeni oyun':'A
   }
   if(T===1&&SES)document.getElementById('v1').insertAdjacentHTML('beforeend','<div style="text-align:center"><button class="ghost" onclick="logout()">Çıxış</button></div>');
   if(T===2){
-    document.getElementById('v2').innerHTML=S.matches.length?S.matches.map(function(m){
-      return'<div class="card"><div class="m-head"><span>'+fmt(m.date)+(m.h?' '+esc(m.h):'')+(m.st?', '+esc(m.st):'')+'</span>'+(adm()?'<span><button class="ghost" onclick="editMatch(\''+m.id+'\')">Düzəlt</button><button class="ghost" onclick="delMatch(\''+m.id+'\')">'+(askDel===m.id?'Əminsiniz? Yenə toxunun':'Sil')+'</button></span>':'')+'</div><div class="m-score"><span class="'+(m.a>m.b?'w':'')+'">'+m.a+'</span><span style="color:var(--mute)">:</span><span class="'+(m.b>m.a?'w':'')+'">'+m.b+'</span></div><div class="sides"><div><small>Nakitkalı</small>'+(m.A.slice().sort(function(x,y){return (y===m.gkA)-(x===m.gkA)}).map(function(n){return esc(n)+(n===m.gkA?' <small class="pos">GK</small>':'')}).join('<br>')||'—')+'</div><div><small>Sadə</small>'+(m.B.slice().sort(function(x,y){return (y===m.gkB)-(x===m.gkB)}).map(function(n){return esc(n)+(n===m.gkB?' <small class="pos">GK</small>':'')}).join('<br>')||'—')+'</div></div></div>'}).join(''):'<p class="empty">Hələ oyun yoxdur. “Yeni oyun” bölməsindən əlavə edin.</p>';
+    document.getElementById('v2').innerHTML=meBar()+(S.matches.length?S.matches.map(function(m){
+      return'<div class="card"><div class="m-head"><span>'+fmt(m.date)+(m.h?' '+esc(m.h):'')+(m.st?', '+esc(m.st):'')+'</span>'+(adm()?'<span><button class="ghost" onclick="editMatch(\''+m.id+'\')">Düzəlt</button><button class="ghost" onclick="delMatch(\''+m.id+'\')">'+(askDel===m.id?'Əminsiniz? Yenə toxunun':'Sil')+'</button></span>':'')+'</div><div class="m-score"><span class="'+(m.a>m.b?'w':'')+'">'+m.a+'</span><span style="color:var(--mute)">:</span><span class="'+(m.b>m.a?'w':'')+'">'+m.b+'</span></div><div class="sides"><div><small>Nakitkalı</small>'+(m.A.slice().sort(function(x,y){return (y===m.gkA)-(x===m.gkA)}).map(function(n){return esc(n)+(n===m.gkA?' <small class="pos">GK</small>':'')}).join('<br>')||'—')+'</div><div><small>Sadə</small>'+(m.B.slice().sort(function(x,y){return (y===m.gkB)-(x===m.gkB)}).map(function(n){return esc(n)+(n===m.gkB?' <small class="pos">GK</small>':'')}).join('<br>')||'—')+'</div></div>'+voteBlock(m)+'</div>'}).join(''):'<p class="empty">Hələ oyun yoxdur.</p>');
   }
   if(T===3){
     var st={};
     S.matches.forEach(function(m){[['A',m.a,m.b],['B',m.b,m.a]].forEach(function(s){(m[s[0]]).forEach(function(n){var r=st[n]=st[n]||{p:0,w:0,d:0,l:0};r.p++;if(n===m['gk'+s[0]])r.g=(r.g||0)+1;if(s[1]>s[2])r.w++;else if(s[1]===s[2])r.d++;else r.l++})})});
+    var bc={};S.matches.forEach(function(m){if(vclosed(m))winners(m).w.forEach(function(n){bc[n]=(bc[n]||0)+1})});
     var rows=Object.keys(st).sort(function(x,y){return st[y].w-st[x].w||st[y].p-st[x].p});
-    document.getElementById('v3').innerHTML=rows.length?'<div class="card wrap"><table><tr><th>Oyunçu</th><th>O</th><th>Q</th><th>B</th><th>M</th><th>Q %</th><th>GK</th></tr>'+rows.map(function(n){var r=st[n];return'<tr><td>'+esc(n)+'</td><td>'+r.p+'</td><td>'+r.w+'</td><td>'+r.d+'</td><td>'+r.l+'</td><td>'+Math.round(r.w/r.p*100)+'</td><td>'+(r.g||0)+'</td></tr>'}).join('')+'</table></div><p class="empty">O – oyun, Q – qələbə, B – bərabərlik, M – məğlubiyyət, GK – qapıçı olduğu oyun.</p>':'<p class="empty">Statistika ilk oyundan sonra görünəcək.</p>';
+    document.getElementById('v3').innerHTML=rows.length?'<div class="card wrap"><table><tr><th>Oyunçu</th><th>O</th><th>Q</th><th>B</th><th>M</th><th>Q %</th><th>GK</th><th>Ən yaxşı</th></tr>'+rows.map(function(n){var r=st[n];return'<tr><td>'+esc(n)+'</td><td>'+r.p+'</td><td>'+r.w+'</td><td>'+r.d+'</td><td>'+r.l+'</td><td>'+Math.round(r.w/r.p*100)+'</td><td>'+(r.g||0)+'</td><td>'+(bc[n]||0)+'</td></tr>'}).join('')+'</table></div><p class="empty">O – oyun, Q – qələbə, B – bərabərlik, M – məğlubiyyət, GK – qapıçı olduğu oyun, Ən yaxşı – oyunun ən yaxşısı seçilmə sayı.</p>':'<p class="empty">Statistika ilk oyundan sonra görünəcək.</p>';
   }
 }
 tab(adm()?1:2);init();
