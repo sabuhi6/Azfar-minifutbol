@@ -352,6 +352,13 @@ main{--ink:#eef5ef;--mute:#a9c7b3;--line:rgba(255,255,255,.18);--bg:rgba(255,255
 .tdot[hidden]{display:none}
 .nx-empty{text-align:center;padding:22px 16px}
 .nx-empty h2{margin:8px 0 4px}
+.chips.per{align-items:center;flex-wrap:nowrap}
+.psel{flex:1;min-width:0;border-radius:999px;padding:6px 10px;font-size:14px;border:2px solid var(--line);background:var(--bg);color:var(--ink)}
+.psel.on{border-color:var(--y);background:var(--y);color:#2a2000;font-weight:600}
+.psel:disabled{opacity:.5}
+.psel option{color:#17261d;background:#fff}
+.bt{display:inline-flex;align-items:center;vertical-align:-3px}
+.bt .ico{display:block}
 </style>
 </head>
 <body>
@@ -600,9 +607,13 @@ function showImg(b){
   document.getElementById('imgcl').onclick=function(){o.remove();URL.revokeObjectURL(url)};
   var sh=document.getElementById('imgsh');if(sh)sh.onclick=function(){navigator.share({files:[file],title:'Minifutbol'}).catch(function(){})};
 }
-var PER='all';
-function inPer(m){var t=today(),d=new Date();d.setDate(1);d.setMonth(d.getMonth()-1);var pm=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');return PER==='all'||(PER==='y'&&m.date.slice(0,4)===t.slice(0,4))||(PER==='m'&&m.date.slice(0,7)===t.slice(0,7))||(PER==='p'&&m.date.slice(0,7)===pm)}
-function periodBar(){return'<div class="chips"><small class="lb">Dövr</small>'+[['all','Hamısı'],['y','Bu il'],['m','Bu ay'],['p','Keçən ay']].map(function(o){return'<button class="chip'+(PER===o[0]?' A':'')+'" onclick="PER=\''+o[0]+'\';rr()">'+o[1]+'</button>'}).join('')+'</div>'}
+var PER='all',PY='',PM='';
+function setPer(y,m){PY=y;PM=y?m:'';PER=PY?PY+'-'+(PM||'*'):'all';rr()}
+function inPer(m){var d=m.date||'';if(PY&&d.slice(0,4)!==PY)return false;if(PY&&PM&&d.slice(5,7)!==PM)return false;return true}
+function periodBar(){var ys={},ms={};S.matches.forEach(function(m){var d=m.date||'';if(d.length<7)return;ys[d.slice(0,4)]=1;if(d.slice(0,4)===PY)ms[d.slice(5,7)]=1});
+  var Y=Object.keys(ys).sort().reverse(),M=Object.keys(ms).sort(),MN=['Yanvar','Fevral','Mart','Aprel','May','İyun','İyul','Avqust','Sentyabr','Oktyabr','Noyabr','Dekabr'];
+  if(PY&&!ys[PY]){PY='';PM='';PER='all'}
+  return'<div class="chips per"><small class="lb">Dövr</small><button class="chip'+(!PY?' A':'')+'" onclick="setPer(\'\',\'\')">Hamısı</button><select class="psel'+(PY?' on':'')+'" aria-label="İl" onchange="setPer(this.value,\'\')"><option value="">İl</option>'+Y.map(function(y){return'<option'+(y===PY?' selected':'')+'>'+y+'</option>'}).join('')+'</select><select class="psel'+(PM?' on':'')+'" aria-label="Ay" '+(PY?'':'disabled ')+'onchange="setPer(PY,this.value)"><option value="">'+(PY?'Bütün il':'Ay')+'</option>'+M.map(function(k){return'<option value="'+k+'"'+(k===PM?' selected':'')+'>'+MN[+k-1]+'</option>'}).join('')+'</select></div>'}
 function sortBar(){return'<div class="chips"><small class="lb">Sıralama</small>'+[['w','Qələbə'],['g','Qol'],['a','Ötürmə']].map(function(o){return'<button class="chip'+(SK===o[0]?' A':'')+'" onclick="SK=\''+o[0]+'\';rr()">'+o[1]+'</button>'}).join('')+'</div>'}
 function vidBtn(m){return /^https:\/\/(t|telegram)\.me\//.test(m.vid||'')?'<a class="btn full" style="display:block;text-align:center;text-decoration:none" href="'+esc(m.vid)+'" target="_blank" rel="noopener">Çəkilişə bax</a>':''}
 function stOpts(){var u={};S.matches.forEach(function(m){if(m.st)u[m.st]=1});return Object.keys(u).map(function(k){return'<option value="'+esc(k)+'">'}).join('')}
@@ -626,7 +637,7 @@ function gate(){var g=document.getElementById('gate');if(!g)return;var nd=gateNe
   if(!nd){if(!g.hidden){g.hidden=true;document.body.classList.remove('gated');GKEY=''}return}
   document.body.classList.add('gated');if(g.hidden){g.hidden=false;g.classList.add('show');setTimeout(function(){g.classList.remove('show')},450)}
   var L=S.players.filter(function(n){return!GQ||n.toLowerCase().indexOf(GQ.toLowerCase())>-1});
-  var h='<div class="gbox" role="dialog" aria-modal="true" aria-labelledby="gt"><div class="glogo">⚽</div><h2 id="gt">Siz kimsiniz?</h2><p>Adınızı seçin. Bu telefonda yadda qalacaq və səs verərkən istifadə olunacaq.</p>';
+  var h='<div class="gbox" role="dialog" aria-modal="true" aria-labelledby="gt"><div class="glogo">⚽</div><h2 id="gt">Xoş gəlmisiniz!</h2><p>Zəhmət olmasa, adınızı seçin. Bu telefonda yadda qalacaq və səs verərkən istifadə olunacaq.</p>';
   if(nd==='load')h+='<div class="glist">'+[1,2,3,4,5,6].map(function(){return'<span class="gname sk-g"><i class="sk" style="width:70%"></i></span>'}).join('')+'</div>';
   else h+=(S.players.length>12?'<input id="gq" class="gq" placeholder="Adı axtar…" value="'+esc(GQ)+'" oninput="GQ=this.value;gate()">':'')+'<div class="glist">'+(L.length?L.map(function(n){return'<button class="gname'+(GP===n?' on':'')+'" onclick="GP=decodeURIComponent(\''+encodeURIComponent(n).replace(/'/g,'%27')+'\');gate()">'+av(n,30)+'<span>'+esc(n)+'</span></button>'}).join(''):'<p class="empty">Tapılmadı</p>')+'</div><button class="btn full" '+(GP?'':'disabled ')+'onclick="gateOk()">'+(GP?esc(GP)+' kimi davam et':'Adınızı seçin')+'</button>';
   h+='<button class="ghost gadm" onclick="tab(1)">Admin girişi</button></div>';
@@ -701,6 +712,7 @@ function ngClose(id,c){ngSet(id,c?{status:'closed'}:{status:'open',vend:0})}
 function ngDel(id){if(askDel!=='nx'+id){askDel='nx'+id;return render()}askDel=null;DB.collection('matches').doc(id).delete()}
 function finishNext(id){ngSet(id,{status:'done'})}
 function nextToMatch(){var g=curNext();if(!g)return;var r=rsvp(g);D={date:g.date,sel:{},a:'',b:'',st:g.st||'',h:g.h||'',fromNext:g.id,pool:r.main.slice()};tab(1);window.scrollTo(0,0)}
+var BOOT='<span class="bt" title="Ötürmə"><svg class="ico" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><defs><mask id="btm" maskUnits="userSpaceOnUse" x="0" y="0" width="24" height="24"><rect width="24" height="24" fill="#fff"/><rect x="6.4" y="10.3" width="6" height=".8" rx=".25" fill="#000" transform="rotate(-54 9.4 10.7)"/><rect x="10.6" y="12" width="5" height=".8" rx=".25" fill="#000" transform="rotate(-54 13.1 12.4)"/></mask></defs><circle cx="12" cy="12" r="11" fill="#fff" stroke="#b9bfbb" stroke-width="1.1"/><g fill="#141414"><g transform="translate(12 12) rotate(54) scale(.92) translate(-12.2 -11.2)"><path d="M4.2 13.4L4.2 6.8Q4.2 5.8 5.2 5.8L6.5 5.8Q7.2 5.8 7.5 6.4L7.9 7.3Q8.4 8.2 9.3 7.8L9.6 7.7Q10 7.5 10.4 7.7L19.4 12.3Q20.3 12.8 20.3 13.4Z" mask="url(#btm)"/><rect x="4" y="13.95" width="16.4" height=".9" rx=".3"/><path d="M4.6 15h2l-1 1.7zM8.8 15h2l-1 1.7zM13 15h2l-1 1.7zM17.2 15h2l-1 1.7z"/></g></g></svg></span>';
 var HELP=false,CK='',MLOAD=false,MSLOW=false;
 function moveInd(){var i=document.getElementById('tind'),b=document.getElementById('t'+T);if(!i)return;if(!b||b.style.display==='none'){i.style.opacity='0';return}i.style.opacity='1';i.style.left=b.offsetLeft+'px';i.style.width=b.offsetWidth+'px';if(!moveInd.on){moveInd.on=1;void i.offsetWidth;i.classList.add('go')}}
 window.addEventListener('resize',moveInd);
@@ -718,8 +730,8 @@ function statView(rows,st,bc,gl,as){
   if(rows.length>=2){var top=rows.slice(0,3),ord=top.length===3?[1,0,2]:[1,0].filter(function(i){return i<top.length});
     h+='<div class="podium">'+ord.map(function(i){var n=top[i];return'<button class="pod p'+(i+1)+'" onclick="openP('+PRL.indexOf(n)+')"><span class="pav">'+av(n,i===0?60:48)+'<i>'+(i+1)+'</i></span><span class="pn">'+esc(n)+'</span><span class="pv"><span data-n="'+mv(n)+'">'+mv(n)+'</span> <small>'+ml+'</small></span><span class="pb"></span></button>'}).join('')+'</div>'}
   h+='<div class="card list sl">'+rows.map(function(n,k){var r=st[n],pc=Math.round(r.w/r.p*100);
-    return'<button class="srow" onclick="openP('+PRL.indexOf(n)+')"><span class="rk">'+(k+1)+'</span>'+av(n,36)+'<span class="sm"><span class="sn">'+esc(n)+'</span><span class="ss">'+r.p+' oyun · '+r.w+'Q '+r.d+'B '+r.l+'M</span>'+(function(){var x=[];if(r.g)x.push('GK '+r.g);if(gl[n]||as[n])x.push('⚽ '+(gl[n]||0),'Öt. '+(as[n]||0));if(bc[n])x.push('<span class="star">★</span> '+bc[n]);return x.length?'<span class="ss">'+x.join(' · ')+'</span>':''})()+'<span class="bar"><b style="width:'+pc+'%"></b></span></span><span class="sv"><b data-n="'+mv(n)+'">'+mv(n)+'</b><small>'+ml+'</small><em><span data-n="'+pc+'">'+pc+'</span>%</em></span></button>'}).join('')+'</div>';
-  h+='<div class="hlp"><button class="ghost" onclick="HELP=!HELP;rr()" aria-expanded="'+HELP+'"><span class="q">?</span> İşarələr nə deməkdir</button>'+(HELP?'<p class="empty">Q – qələbə, B – bərabərlik, M – məğlubiyyət. GK – qapıçı olduğu oyun sayı. ⚽ – qol, Öt. – ötürmə. <span class="star">★</span> – oyunun ən yaxşısı seçilmə sayı. Yaşıl zolaq və faiz – qələbə faizi. Ətraflı görmək üçün oyunçuya toxunun.</p>':'')+'</div>';
+    return'<button class="srow" onclick="openP('+PRL.indexOf(n)+')"><span class="rk">'+(k+1)+'</span>'+av(n,36)+'<span class="sm"><span class="sn">'+esc(n)+'</span><span class="ss">'+r.p+' oyun · '+r.w+'Q '+r.d+'B '+r.l+'M</span>'+(function(){var x=[];if(r.g)x.push('GK '+r.g);if(gl[n]||as[n])x.push('⚽ '+(gl[n]||0),BOOT+' '+(as[n]||0));if(bc[n])x.push('<span class="star">★</span> '+bc[n]);return x.length?'<span class="ss">'+x.join(' · ')+'</span>':''})()+'<span class="bar"><b style="width:'+pc+'%"></b></span></span><span class="sv"><b data-n="'+mv(n)+'">'+mv(n)+'</b><small>'+ml+'</small><em><span data-n="'+pc+'">'+pc+'</span>%</em></span></button>'}).join('')+'</div>';
+  h+='<div class="hlp"><button class="ghost" onclick="HELP=!HELP;rr()" aria-expanded="'+HELP+'"><span class="q">?</span> İşarələr nə deməkdir</button>'+(HELP?'<p class="empty">Q – qələbə, B – bərabərlik, M – məğlubiyyət. GK – qapıçı olduğu oyun sayı. ⚽ – qol, '+BOOT+' – ötürmə. <span class="star">★</span> – oyunun ən yaxşısı seçilmə sayı. Yaşıl zolaq və faiz – qələbə faizi. Ətraflı görmək üçün oyunçuya toxunun.</p>':'')+'</div>';
   return h}
 function render(){gate();renderVote();document.getElementById('fab').textContent=T===1?'×':(adm()?'+':'⚙');
   if(T===1&&!adm()){if(!document.getElementById('le'))document.getElementById('v1').innerHTML='<div class="card"><h2>Admin girişi</h2><p class="empty">Oyun əlavə etmək və düzəltmək üçün daxil olun.</p><input id="le" type="text" placeholder="İstifadəçi adı" autocapitalize="off" autocomplete="username" style="width:100%"><input id="lp" type="password" placeholder="Parol" style="width:100%;margin-top:8px" onkeydown="if(event.key===\'Enter\')login()"><button class="btn full" onclick="login()">Daxil ol</button></div>'}
