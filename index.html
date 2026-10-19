@@ -676,6 +676,28 @@ select{font-size:14px}
 /* iPhone-da yazanda böyütməsin deyə inputlar 16px qalır */
 input{font-size:16px}
 .score input{font-size:30px;width:64px}
+/* qol xronologiyası (test) */
+.glr{display:grid;grid-template-columns:58px minmax(0,1fr) minmax(0,1fr) 30px;gap:6px;align-items:center;margin:6px 0}
+.glr input,.glr select{width:100%;min-width:0;padding:8px 6px}
+.glr select{font-size:13px}
+.glx{padding:4px!important}
+.gla{width:100%;border:1px dashed var(--line)!important;border-radius:10px;margin-top:4px}
+.glc{margin:6px 0 0;font-size:12px}
+.tl{border:1px solid var(--line);border-radius:12px;background:var(--bg);padding:6px 10px;margin-bottom:10px}
+.tl-h{font-size:11px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--mute);text-align:center;padding:4px 0 6px;border-bottom:1px solid var(--line)}
+.tl-r{display:grid;grid-template-columns:minmax(0,1fr) 54px minmax(0,1fr);align-items:center;gap:8px;padding:7px 0;border-top:1px solid var(--line)}
+.tl-h+.tl-r{border-top:0}
+.tl-m{display:flex;flex-direction:column;align-items:center;line-height:1.15}
+.tl-m b{font:700 15px "Roboto Condensed",sans-serif;color:var(--g)}
+.tl-m small{font-size:10.5px;color:var(--mute)}
+.tl-s{min-width:0}
+.tl-r.A .tl-s:first-child{text-align:right}
+.tl-e{display:flex;flex-direction:column;gap:1px;min-width:0}
+.tl-r.A .tl-e{align-items:flex-end}
+.tl-e b{font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.tl-e small{font-size:11px;color:var(--mute);display:inline-flex;align-items:center;gap:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.tl-e .bt{vertical-align:0}
+.tbadge{font:700 10px/1 Inter,sans-serif;letter-spacing:.5px;color:#2A0D05;background:#FF7A59;border-radius:5px;padding:3px 5px;margin-left:6px}
 </style>
 </head>
 <body>
@@ -945,9 +967,9 @@ function rmPlayer(i){var n=S.players[i];delete D.sel[n];if(DB&&PID[n])DB.collect
 function saveMatch(){
   var A=[],B=[];S.players.forEach(function(n){if(D.sel[n]==='A')A.push(n);if(D.sel[n]==='B')B.push(n)});
   if(D.a===''||D.b==='')return alert('Hesabı yazın');
-  var inA=A.concat(D.keepA||[]),inB=B.concat(D.keepB||[]),sl=function(x,ok){return[0,1,2,3,4,5].map(function(i){var n=(x||[])[i]||'';return ok.indexOf(n)>-1?n:''})},lA=sl(D.lnA,inA),lB=sl(D.lnB,inB),evo=mkEv(D.ev,inA.concat(inB)),gA=lA[0],gB=lB[0],tt=D.t||Date.now(),m={date:D.date,A:A.concat(D.keepA||[]),B:B.concat(D.keepB||[]),a:+D.a,b:+D.b,gkA:gA,gkB:gB,fA:D.fA||'2-2-1',fB:D.fB||'2-2-1',lA:lA,lB:lB,ev:evo,st:(D.st||'').trim(),h:D.h||'',vid:(D.vid||'').trim(),t:tt},id=D.editId||'m'+tt;if(D.vote)m.vote=D.vote;if(D.vend)m.vend=D.vend;var fnx=D.fromNext,done=function(){if(fnx)finishNext(fnx,id);D={date:today(),sel:{},a:'',b:'',st:m.st,h:m.h};tab(2)};if(DB){if(saveMatch.busy)return;saveMatch.busy=true;DB.collection('matches').doc(id).set(m).then(function(){saveMatch.busy=false;done()},function(){saveMatch.busy=false})}else{m.id=id;S.matches.unshift(m);save();done()}
+  var inA=A.concat(D.keepA||[]),inB=B.concat(D.keepB||[]),sl=function(x,ok){return[0,1,2,3,4,5].map(function(i){var n=(x||[])[i]||'';return ok.indexOf(n)>-1?n:''})},lA=sl(D.lnA,inA),lB=sl(D.lnB,inB),glo=glClean(D.gl,{A:inA,B:inB}),evo=glo.length?glEv(glo):mkEv(D.ev,inA.concat(inB)),gA=lA[0],gB=lB[0],tt=D.t||Date.now(),m={date:D.date,A:A.concat(D.keepA||[]),B:B.concat(D.keepB||[]),a:+D.a,b:+D.b,gkA:gA,gkB:gB,fA:D.fA||'2-2-1',fB:D.fB||'2-2-1',lA:lA,lB:lB,ev:evo,gl:glo,st:(D.st||'').trim(),h:D.h||'',vid:(D.vid||'').trim(),t:tt},id=D.editId||'m'+tt;if(D.vote)m.vote=D.vote;if(D.vend)m.vend=D.vend;var fnx=D.fromNext,done=function(){if(fnx)finishNext(fnx,id);D={date:today(),sel:{},a:'',b:'',st:m.st,h:m.h};tab(2)};if(DB){if(saveMatch.busy)return;saveMatch.busy=true;DB.collection('matches').doc(id).set(m).then(function(){saveMatch.busy=false;done()},function(){saveMatch.busy=false})}else{m.id=id;S.matches.unshift(m);save();done()}
 }
-function editMatch(id){var m=S.matches.filter(function(x){return x.id===id})[0];if(!m)return;D={date:m.date,sel:{},a:m.a,b:m.b,editId:id,t:m.t,lnA:m.lA||(m.gkA?[m.gkA]:[]),lnB:m.lB||(m.gkB?[m.gkB]:[]),fA:m.fA||'2-2-1',fB:m.fB||'2-2-1',gkA:m.gkA||'',gkB:m.gkB||'',st:m.st||'',h:m.h||'',vid:m.vid||'',ev:JSON.parse(JSON.stringify(m.ev||{})),vote:m.vote,vend:m.vend,keepA:m.A.filter(function(n){return S.players.indexOf(n)<0}),keepB:m.B.filter(function(n){return S.players.indexOf(n)<0})};m.A.forEach(function(n){D.sel[n]='A'});m.B.forEach(function(n){D.sel[n]='B'});tab(1);window.scrollTo(0,0)}
+function editMatch(id){var m=S.matches.filter(function(x){return x.id===id})[0];if(!m)return;D={date:m.date,sel:{},a:m.a,b:m.b,editId:id,t:m.t,lnA:m.lA||(m.gkA?[m.gkA]:[]),lnB:m.lB||(m.gkB?[m.gkB]:[]),fA:m.fA||'2-2-1',fB:m.fB||'2-2-1',gkA:m.gkA||'',gkB:m.gkB||'',st:m.st||'',h:m.h||'',vid:m.vid||'',ev:JSON.parse(JSON.stringify(m.ev||{})),gl:JSON.parse(JSON.stringify(m.gl||[])),vote:m.vote,vend:m.vend,keepA:m.A.filter(function(n){return S.players.indexOf(n)<0}),keepB:m.B.filter(function(n){return S.players.indexOf(n)<0})};m.A.forEach(function(n){D.sel[n]='A'});m.B.forEach(function(n){D.sel[n]='B'});tab(1);window.scrollTo(0,0)}
 function cancelEdit(){D={date:today(),sel:{},a:'',b:''};tab(2)}
 function delMatch(id){if(askDel!==id){askDel=id;return render()}askDel=null;if(DB)DB.collection('matches').doc(id).delete();else{S.matches=S.matches.filter(function(m){return m.id!==id});save();render()}}
 var OPEN=null,JUST=null,TGB=false;function tg(id){if(TGB)return;var cur=OPEN&&document.querySelector('.md');if(cur&&!matchMedia('(prefers-reduced-motion: reduce)').matches){TGB=true;cur.classList.add('closing');var ch=document.querySelector('.mi.open');if(ch)ch.classList.add('closing');setTimeout(function(){TGB=false;tg2(id)},200);return}tg2(id)}
@@ -1120,8 +1142,30 @@ function gc21(m,dl){var o=OPEN===m.id,e=m.ev||{},G={A:[],B:[]},wa=m.a>m.b,wb=m.b
   else if(vopen(m)&&!o)h+='<button class="gc-mvp" onclick="gcOpen(\''+m.id+'\')"><span class="star">★</span><div><small>Səsvermə açıqdır</small><b>Ən yaxşı oyunçunu seçin</b></div><span class="chev">›</span></button>';
   if(o){var mb=mapBlock(m).replace(/^<button[^>]*>[^<]*<\/button>/,'');
     if(!mb)mb='<div class="sides"><div><small>Səhra Pişikləri</small>'+(m.A.slice().sort(function(x,y){return(y===m.gkA)-(x===m.gkA)}).map(function(n){return esc(n)+(n===m.gkA?' <small class="pos">GK</small>':'')}).join('<br>')||'—')+'</div><div><small>Vəhşi Tırtıllar</small>'+(m.B.slice().sort(function(x,y){return(y===m.gkB)-(x===m.gkB)}).map(function(n){return esc(n)+(n===m.gkB?' <small class="pos">GK</small>':'')}).join('<br>')||'—')+'</div></div>';
-    h+='<div class="gc-d">'+(adm()?'<div class="gc-a"><button class="ghost" onclick="editMatch(\''+m.id+'\')">Düzəlt</button><button class="ghost" onclick="delMatch(\''+m.id+'\')">'+(askDel===m.id?'Əminsiniz? Yenə toxunun':'Sil')+'</button></div>':'')+mb+vidBtn(m)+shBtn(m)+voteBlock(m)+'</div>'}
+    h+='<div class="gc-d">'+glTL(m)+(adm()?'<div class="gc-a"><button class="ghost" onclick="editMatch(\''+m.id+'\')">Düzəlt</button><button class="ghost" onclick="delMatch(\''+m.id+'\')">'+(askDel===m.id?'Əminsiniz? Yenə toxunun':'Sil')+'</button></div>':'')+mb+vidBtn(m)+shBtn(m)+voteBlock(m)+'</div>'}
   return h+'<button class="btn full gc-b" onclick="gcOpen(\''+m.id+'\')">'+(o?'Bağla':'Düzülüşə bax')+'</button></section>'}
+/* qol xronologiyası (test) */
+function glTeams(){var A=S.players.filter(function(n){return D.sel[n]==='A'}).concat(D.keepA||[]),B=S.players.filter(function(n){return D.sel[n]==='B'}).concat(D.keepB||[]);return{A:A,B:B}}
+function glTeamOf(T,n){return T.B.indexOf(n)>-1?'B':T.A.indexOf(n)>-1?'A':''}
+function glAdd(){D.gl=D.gl||[];var l=D.gl[D.gl.length-1];D.gl.push({m:'',s:'',a:''});rr()}
+function glDel(i){D.gl.splice(i,1);rr()}
+function glSet(i,k,v){var g=D.gl[i];if(!g)return;g[k]=v;if(k==='s'){var T=glTeams();if(g.a&&glTeamOf(T,g.a)!==glTeamOf(T,v))g.a='';if(g.a===v)g.a=''}if(k!=='m')rr()}
+function glClean(gl,T){return(gl||[]).filter(function(g){return g.s&&glTeamOf(T,g.s)}).map(function(g){var t=glTeamOf(T,g.s),o={t:t,s:g.s,m:Math.max(0,parseInt(g.m,10)||0)};if(g.a&&g.a!==g.s&&glTeamOf(T,g.a)===t)o.a=g.a;return o}).sort(function(x,y){return x.m-y.m})}
+function glEv(gl){var o={};gl.forEach(function(g){o[g.s]=o[g.s]||[0,0];o[g.s][0]++;if(g.a){o[g.a]=o[g.a]||[0,0];o[g.a][1]++}});return o}
+function evForm(){
+  var T=glTeams(),all=T.A.concat(T.B);if(!all.length)return'';
+  var gl=D.gl||[],c={A:0,B:0};gl.forEach(function(g){var t=glTeamOf(T,g.s);if(t)c[t]++});
+  function opt(l,cur){return l.map(function(n){return'<option value="'+esc(n)+'"'+(n===cur?' selected':'')+'>'+esc(n)+'</option>'}).join('')}
+  var h='<div class="lined"><div class="cnt"><b>Qollar</b><small>dəqiqə · qolu vuran · ötürmə</small></div>';
+  h+=gl.map(function(g,i){var t=glTeamOf(T,g.s),mates=t?T[t].filter(function(n){return n!==g.s}):[];
+    return'<div class="glr"><input type="number" inputmode="numeric" min="0" max="200" class="glm" id="glm'+i+'" placeholder="dəq" value="'+esc(g.m)+'" oninput="glSet('+i+',\'m\',this.value)"><select aria-label="Qolu vuran" onchange="glSet('+i+',\'s\',this.value)"><option value="">Qolu vuran</option><optgroup label="Səhra Pişikləri">'+opt(T.A,g.s)+'</optgroup><optgroup label="Vəhşi Tırtıllar">'+opt(T.B,g.s)+'</optgroup></select><select aria-label="Ötürmə" '+(t?'':'disabled ')+'onchange="glSet('+i+',\'a\',this.value)"><option value="">Ötürmə yox</option>'+opt(mates,g.a)+'</select><button class="ghost glx" aria-label="Sil" onclick="glDel('+i+')">✕</button></div>'}).join('');
+  h+='<button class="ghost gla" onclick="glAdd()">+ Qol əlavə et</button>';
+  if(gl.length)h+='<p class="empty glc">Qeyd olunan: Səhra Pişikləri <b>'+c.A+'</b>'+(D.a!==''?' / '+D.a:'')+' · Vəhşi Tırtıllar <b>'+c.B+'</b>'+(D.b!==''?' / '+D.b:'')+'</p>';
+  return h+'</div>'}
+function glTL(m){var gl=m.gl||[];if(!gl.length)return'';var a=0,b=0;
+  return'<div class="tl"><div class="tl-h">Qollar</div>'+gl.slice().sort(function(x,y){return x.m-y.m}).map(function(g){if(g.t==='A')a++;else b++;
+    var ev='<span class="tl-e"><b>⚽ '+esc(g.s)+'</b>'+(g.a?'<small>'+BOOT+' '+esc(g.a)+'</small>':'')+'</span>';
+    return'<div class="tl-r '+g.t+'"><span class="tl-s">'+(g.t==='A'?ev:'')+'</span><span class="tl-m"><b>'+g.m+'\'</b><small>'+a+' - '+b+'</small></span><span class="tl-s">'+(g.t==='B'?ev:'')+'</span></div>'}).join('')+'</div>'}
 window.addEventListener('unhandledrejection',function(e){e.preventDefault()});
 tab(location.hash==='#next'?4:2);init();
 </script>
