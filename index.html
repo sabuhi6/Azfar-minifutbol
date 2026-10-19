@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Minifutbol 2.1</title>
 <link rel="manifest" href="manifest.webmanifest">
-<meta name="theme-color" content="#14482c">
+<meta name="theme-color" content="#0C1511">
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="mobile-web-app-capable" content="yes">
@@ -488,8 +488,121 @@ body{font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif!important;-
 .nx-wx .wk{font-size:14px!important;color:var(--ink)!important}
 .nx-wx .wi{font-size:18px!important}
 .nx-wx small{font:500 12px Inter,sans-serif!important}
+/* oyun kartları (3.0 üslubu) */
+.gcl{display:flex;flex-direction:column;gap:12px}
+.gc{padding:16px!important;display:flex;flex-direction:column;gap:12px;margin:0!important}
+.gc-h{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:12.5px;color:var(--mute);font-weight:600}
+.gc-h span:first-child{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.gc-p{flex:none;background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:1px 8px;color:var(--ink)}
+.gc-s{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));align-items:center}
+.gc-t{display:flex;flex-direction:column;align-items:center;gap:6px;font-size:14px;text-align:center}
+.gc-t .tlogo{margin:0;filter:drop-shadow(0 3px 6px rgba(0,0,0,.18))}
+.gc-n{display:flex;justify-content:center;font:700 44px/1 "Roboto Condensed",Impact,sans-serif}
+.gc-n em{font-style:normal;color:var(--mute);margin:0 3px}
+.gc-n .l{color:var(--mute)}
+.gc-g{display:grid;grid-template-columns:1fr 1fr;gap:6px 12px;font-size:13px;border-top:1px solid var(--line);padding-top:10px}
+.gc-g>div{display:flex;flex-direction:column;gap:5px;min-width:0}
+.gc-r{display:flex;align-items:center;gap:8px;min-width:0}
+.gc-g>div+div .gc-r{justify-content:flex-end}
+.gc-r .en{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.gc-r .ei{flex:none;display:inline-flex;align-items:center;gap:3px;font-size:12px}
+.gc-r .ei .bt{vertical-align:0}
+.gc-mvp{display:flex;align-items:center;gap:10px;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:8px 12px;width:100%;color:var(--ink);text-align:left;font:inherit;box-sizing:border-box}
+.gc-mvp .av{margin:0;flex:none}
+.gc-mvp div{flex:1;min-width:0;display:flex;flex-direction:column}
+.gc-mvp small{font-size:11px;color:var(--mute)}
+.gc-mvp .star{font-size:20px;flex:none}
+.gc .btn.full{margin-top:0}
+.gc.open .gc-b{background:var(--bg);color:var(--ink);border:1px solid var(--line)}
+.gc-d{border-top:1px dashed var(--line);padding-top:10px}
+.gc-d .pitch{margin-top:0}
+.gc-a{display:flex;justify-content:flex-end;gap:4px;margin-bottom:6px}
+.nm21{display:flex;align-items:center;gap:14px;width:100%;text-align:left;color:var(--ink);padding:12px 14px!important;font:inherit;margin-bottom:14px}
+.nm21-d{width:50px;height:54px;flex:none;border-radius:12px;background:var(--bg);border:1px solid var(--line);display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.1}
+.nm21-d b{font:700 24px/1 "Roboto Condensed",sans-serif}
+.nm21-d small{font-size:11px;font-weight:600;color:var(--mute);text-transform:uppercase}
+.nm21-m{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.nm21-m small{font-size:11px;font-weight:700;color:var(--g);letter-spacing:.6px;text-transform:uppercase}
+.nm21-m b{font-size:16px}
+.nm21-m span{font-size:13px;color:var(--mute);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.nm21-c{display:flex;flex-direction:column;align-items:flex-end;flex:none}
+.nm21-c b{font:700 24px/1 "Roboto Condensed",sans-serif}
+.nm21-c em{font-style:normal;color:var(--mute);font-size:16px}
+.nm21-c small{font-size:11px;color:var(--mute)}
 .tlogo{display:inline-block;vertical-align:middle;width:auto;margin:-2px 6px 0 0}
 .pitch .pt .tlogo{margin-right:6px}
+/* 3.0 rəng palitrası (yalnız rənglər) */
+:root{color-scheme:dark;--bg:#0C1511;--card:#15221B;--ink:#EEF4EF;--mute:#93A69A;--line:#24372C;--y:#F5B83D;--b:#7FA7D9;--g:#C5F25A;--red:#FF7A59;--c-ink:#EEF4EF;--c-mute:#93A69A;--c-line:#24372C;--c-bg:#0C1511}
+html{background:#0C1511!important}
+body{color:var(--ink)}
+main{--ink:#EEF4EF;--mute:#93A69A;--line:#24372C;--bg:#0C1511;color:var(--ink)}
+.card,.pwa{background:#15221B!important;border-color:#24372C!important;box-shadow:none!important}
+.grp{color:var(--mute)!important}
+input,select{background:#0C1511;border-color:#24372C;color:var(--ink);color-scheme:dark}
+input::placeholder{color:#7d8f83}
+select option,.psel option{color:var(--ink)!important;background:#15221B!important}
+.btn{background:#C5F25A;color:#0C1511}
+.btn.wa{background:#1f8f4e;color:#fff}
+.ghost{color:var(--mute)}
+.top{background:#0C1511!important;border-bottom:1px solid #24372C!important}
+.brand{color:var(--ink)!important}
+.logo{background:#C5F25A!important;color:#0C1511!important}
+.mepl{background:#15221B!important;border-color:#24372C!important;color:var(--ink)!important}
+.mepl svg{color:var(--mute)!important}
+.shd{color:#C5F25A!important}.shd.on{background:rgba(197,242,90,.14)!important}
+.bn{background:rgba(21,34,27,.95)!important;border-top:1px solid #24372C!important}
+.bn button{color:var(--mute)!important}
+.bn button.on{background:rgba(197,242,90,.12)!important;color:#C5F25A!important}
+.bn .tdot{background:var(--red)!important;box-shadow:none!important}
+.chip,.chips .chip{background:#0C1511!important;border-color:#24372C!important;color:var(--ink)!important}
+.chip.A,.chips .chip.A{background:var(--y)!important;border-color:var(--y)!important;color:#241A00!important}
+.chip.B,.chips .chip.B{background:var(--b)!important;border-color:var(--b)!important;color:#0C1A2B!important}
+.chips.per .chip.A,.chips:not(.per) .chip.A.srt{background:#C5F25A!important;border-color:#C5F25A!important;color:#0C1511!important}
+.chip.in{border-color:#C5F25A!important;box-shadow:none!important}
+.psel{background:#0C1511!important;border-color:#24372C!important;color:var(--ink)!important}
+.psel.on{background:#C5F25A!important;border-color:#C5F25A!important;color:#0C1511!important}
+.av,.av.ini{background:#24372C;color:var(--ink)}
+.srow:active,.pxr.open,.pxr:active{background:#0C1511!important}
+.bar{background:#24372C!important}.bar b{background:#C5F25A!important}
+.sv em{color:#C5F25A!important}
+.res.Q{background:#C5F25A;color:#0C1511}.res.B{background:var(--mute);color:#0C1511}.res.M{background:var(--red);color:#2A0D05}
+.star{color:#F5B83D}
+.pb{background:#15221B!important;border-color:#24372C!important}
+.p1 .pb{background:linear-gradient(180deg,rgba(197,242,90,.55),#15221B)!important}
+.p2 .pb{background:linear-gradient(180deg,rgba(147,166,154,.4),#15221B)!important}
+.p3 .pb{background:linear-gradient(180deg,rgba(255,122,89,.35),#15221B)!important}
+.pav i{border-color:#15221B!important}
+.p1 .pav .av{border-color:#C5F25A}.p1 .pav i{background:#C5F25A;color:#0C1511}
+.hlp .empty{background:#15221B!important;border-color:#24372C!important}
+.vbadge{background:#C5F25A!important;color:#0C1511!important}
+.vbadge.off{background:#24372C!important;color:var(--ink)!important}
+.nx-st{color:var(--ink)!important}
+.nx-map a{color:#C5F25A!important}
+.nx-wx,.nx-wx .wk,.nx-wx b,.nx-wx>span:nth-child(2) b,.nx-wx .wk b{color:var(--ink)!important}
+.nx-btns button{background:#0C1511!important;border-color:#24372C!important;color:var(--ink)!important}
+.nx-btns .nx-in.on{background:#C5F25A!important;border-color:#C5F25A!important;color:#0C1511!important}
+.nx-btns .nx-out.on{background:rgba(255,122,89,.16)!important;border-color:var(--red)!important;color:var(--red)!important}
+.nx-p{background:#0C1511!important;color:var(--ink)}
+.nx-p.o{color:#7d8f83!important}
+.nx-p.n{background:none!important;box-shadow:inset 0 0 0 1px #24372C!important}
+.nx-p.me,.nx-p.n.me{background:#C5F25A!important;color:#0C1511!important;box-shadow:none!important}
+.nx-lb,.nm21-m small{color:#C5F25A}
+.nx-new,.nx-newb.sec{border-color:#24372C!important;color:var(--ink)!important;background:none!important}
+.stp button{background:#0C1511;border-color:#24372C;color:var(--ink)}
+.gc-p,.gc-mvp,.nm21-d{background:#0C1511!important;border-color:#24372C!important}
+.gc.open .gc-b{background:#0C1511;color:var(--ink);border-color:#24372C}
+.gc-n .l{color:#93A69A}
+.gc-t .tlogo{filter:drop-shadow(0 4px 10px rgba(0,0,0,.45))}
+.pitch{background:repeating-linear-gradient(180deg,#17442C 0 47px,#1A4B31 47px 94px)!important}
+.pl i.A{background:var(--y);color:#241A00}.pl i.B{background:var(--b);color:#0C1A2B}
+.mi.rA .mi-s b.w{color:var(--y)!important}
+#gate{background:radial-gradient(120% 70% at 50% 0%,rgba(31,60,44,.96),rgba(12,21,17,.98) 60%)!important}
+.gbox{background:#15221B!important;border-color:#24372C!important}
+.gname{background:#0C1511!important;border-color:#24372C!important;color:var(--ink)!important}
+.gname.on{border-color:#C5F25A!important;background:rgba(197,242,90,.1)!important}
+.gbox .btn:disabled{background:#24372C;color:var(--mute);opacity:1}
+.evt{border-left-color:var(--y)}.evt.B{border-left-color:var(--b)}
+#v3 .chip.A{background:#C5F25A!important;border-color:#C5F25A!important;color:#0C1511!important}
 </style>
 </head>
 <body>
@@ -904,12 +1017,10 @@ function render(){gate();hdr();renderVote();document.getElementById('fab').textC
   if(T===1&&SES)document.getElementById('v1').insertAdjacentHTML('beforeend','<div style="text-align:center"><button class="ghost" onclick="logout()">Çıxış</button></div>');
   if(T===2){
     var now=Date.now();if(ENTER&&S.matches.length>0&&!RM()){ENTER=false;ET0=now}var en=ET0&&now-ET0<1200,el=en?now-ET0:0,ix=0,dl=function(){var d=Math.min(ix++,14)*45-el;return en?' style="--d:'+d+'ms"':''};
-    var lm='',out='';S.matches.forEach(function(m){var mk=(m.date||'').slice(0,7);if(mk!==lm){if(lm)out+='</div>';out+='<div class="grp"'+dl()+'>'+monthName(mk)+'</div><div class="card list"'+(en?' style="--d:'+(Math.min(ix,14)*45-el)+'ms"':'')+'>';lm=mk}
-      var o=OPEN===m.id,wa=m.a>m.b,wb=m.b>m.a,ca=wa?'w':(wb?'l':''),cb=wb?'w':(wa?'l':'');
-      out+='<div'+dl()+' class="mi '+(wa?'rA':wb?'rB':'rD')+(o?' open':'')+(o&&JUST===m.id?' anim':'')+'" id="mi'+m.id+'" role="button" tabindex="0" aria-expanded="'+o+'" onclick="tg(\''+m.id+'\')" onkeydown="if(event.key===\'Enter\')tg(\''+m.id+'\')"><div class="mi-t"><span class="dd">'+(+m.date.slice(8,10))+'</span><span class="mm">'+MNL[+m.date.slice(5,7)-1]+'</span><small>'+(m.h?esc(m.h):'')+'</small></div><div class="mi-n"><div class="'+ca+'">'+tlogo('A',18)+'Səhra Pişikləri</div><div class="'+cb+'">'+tlogo('B',18)+'Vəhşi Tırtıllar</div></div><div class="mi-s"><b class="'+ca+'">'+m.a+'</b><b class="'+cb+'">'+m.b+'</b></div><span class="chev">›</span></div>';
-      if(o)out+='<div class="md'+(JUST===m.id?' anim':'')+'"><div class="mdi"><div class="m-head"><span>'+fmt(m.date)+(m.h?', '+esc(m.h):'')+(m.st?' · '+esc(m.st):'')+'</span>'+(adm()?'<span><button class="ghost" onclick="editMatch(\''+m.id+'\')">Düzəlt</button><button class="ghost" onclick="delMatch(\''+m.id+'\')">'+(askDel===m.id?'Əminsiniz? Yenə toxunun':'Sil')+'</button></span>':'')+'</div>'+'<div class="sides"><div><small>'+tlogo('A',16)+'Səhra Pişikləri</small>'+(m.A.slice().sort(function(x,y){return (y===m.gkA)-(x===m.gkA)}).map(function(n){return esc(n)+(n===m.gkA?' <small class="pos">GK</small>':'')}).join('<br>')||'—')+'</div><div><small>'+tlogo('B',16)+'Vəhşi Tırtıllar</small>'+(m.B.slice().sort(function(x,y){return (y===m.gkB)-(x===m.gkB)}).map(function(n){return esc(n)+(n===m.gkB?' <small class="pos">GK</small>':'')}).join('<br>')||'—')+'</div></div>'+evLine(m)+vidBtn(m)+mapBlock(m)+shBtn(m)+voteBlock(m)+'</div></div>';
+    var lm='',out='';S.matches.forEach(function(m){var mk=(m.date||'').slice(0,7);if(mk!==lm){if(lm)out+='</div>';out+='<div class="grp"'+dl()+'>'+monthName(mk)+'</div><div class="gcl"'+(en?' style="--d:'+(Math.min(ix,14)*45-el)+'ms"':'')+'>';lm=mk}
+      out+=gc21(m,dl());
     });JUST=null;if(lm)out+='</div>';
-    var v2=document.getElementById('v2'),hh=loading()?skel(5):meBar()+pwaBar()+(S.matches.length?out:'<p class="empty">Hələ oyun yoxdur.</p>'),hk=hh.replace(/ style="--d:-?\d+ms"/g,'')+(en?'':'·');if(hk!==V2K){V2K=hk;v2.innerHTML=hh}if(en&&!v2.classList.contains('enter')){v2.classList.add('enter');clearTimeout(ENT);ENT=setTimeout(function(){v2.classList.remove('enter');ET0=0},1200-el)}
+    var v2=document.getElementById('v2'),hh=loading()?skel(5):meBar()+pwaBar()+nm21()+(S.matches.length?out:'<p class="empty">Hələ oyun yoxdur.</p>'),hk=hh.replace(/ style="--d:-?\d+ms"/g,'')+(en?'':'·');if(hk!==V2K){V2K=hk;v2.innerHTML=hh}if(en&&!v2.classList.contains('enter')){v2.classList.add('enter');clearTimeout(ENT);ENT=setTimeout(function(){v2.classList.remove('enter');ET0=0},1200-el)}
   }
   if(T===3){
     var st={},MS=S.matches.filter(inPer);
@@ -921,6 +1032,23 @@ function render(){gate();hdr();renderVote();document.getElementById('fab').textC
     countUp();
   }
 }
+var GMS=['yan','fev','mar','apr','may','iyn','iyl','avq','sen','okt','noy','dek'];
+function nm21(){var g=curNext();if(!g)return'';var r=rsvp(g),cl=nClosed(g),p=g.date.split('-');
+  return'<button class="card nm21" onclick="tab(4)"><span class="nm21-d"><b>'+(+p[2])+'</b><small>'+GMS[+p[1]-1]+'</small></span><span class="nm21-m"><small>'+(cl?'Səsvermə bitib':'Növbəti oyun')+'</small><b>'+wday(g.date)+(g.h?' · '+esc(g.h):'')+'</b><span>'+esc(g.st||'Stadion')+'</span></span><span class="nm21-c"><b>'+r.main.length+'<em>/'+r.cap+'</em></b><small>gəlir</small></span></button>'}
+function gcOpen(id){if(OPEN===id){OPEN=null;MV=''}else{OPEN=id;MV=id;VD=null}askDel=null;render();var e=document.getElementById('mi'+id);if(e){var r=e.getBoundingClientRect();if(r.top<0||r.top>innerHeight-160)e.scrollIntoView({block:'start',behavior:'smooth'})}}
+function gc21(m,dl){var o=OPEN===m.id,e=m.ev||{},G={A:[],B:[]},wa=m.a>m.b,wb=m.b>m.a;
+  Object.keys(e).forEach(function(n){var x=e[n]||[0,0];if(x[0]||x[1])G[(m.B||[]).indexOf(n)>-1?'B':'A'].push([n,x[0]||0,x[1]||0])});
+  ['A','B'].forEach(function(t){G[t].sort(function(x,y){return y[1]-x[1]||y[2]-x[2]||x[0].localeCompare(y[0])})});
+  var w=vclosed(m)?winners(m):null;
+  var h='<section class="card gc'+(o?' open':'')+'" id="mi'+m.id+'"'+(dl||'')+'><div class="gc-h"><span>'+wday(m.date)+', '+dm(m.date)+(m.h?' · '+esc(m.h):'')+(m.st?' · '+esc(m.st):'')+'</span><span class="gc-p">Bitib</span></div>'
+    +'<div class="gc-s"><div class="gc-t">'+tlogo('A',52)+'<b>Səhra Pişikləri</b></div><div class="gc-n"><span class="'+(wb?'l':'')+'">'+m.a+'</span><em>:</em><span class="'+(wa?'l':'')+'">'+m.b+'</span></div><div class="gc-t">'+tlogo('B',52)+'<b>Vəhşi Tırtıllar</b></div></div>';
+  if(G.A.length||G.B.length)h+='<div class="gc-g">'+['A','B'].map(function(t){return'<div>'+G[t].map(function(x){return'<span class="gc-r"><span class="en">'+esc(x[0])+'</span>'+(x[1]?'<span class="ei">⚽<b>'+x[1]+'</b></span>':'')+(x[2]?'<span class="ei">'+BOOT+'<b>'+x[2]+'</b></span>':'')+'</span>'}).join('')+'</div>'}).join('')+'</div>';
+  if(w&&w.mx>0)h+='<div class="gc-mvp">'+av(w.w[0],30)+'<div><small>Oyunun ən yaxşısı</small><b>'+w.w.map(esc).join(', ')+'</b></div><span class="star">★</span></div>';
+  else if(vopen(m)&&!o)h+='<button class="gc-mvp" onclick="gcOpen(\''+m.id+'\')"><span class="star">★</span><div><small>Səsvermə açıqdır</small><b>Ən yaxşı oyunçunu seçin</b></div><span class="chev">›</span></button>';
+  if(o){var mb=mapBlock(m).replace(/^<button[^>]*>[^<]*<\/button>/,'');
+    if(!mb)mb='<div class="sides"><div><small>Səhra Pişikləri</small>'+(m.A.slice().sort(function(x,y){return(y===m.gkA)-(x===m.gkA)}).map(function(n){return esc(n)+(n===m.gkA?' <small class="pos">GK</small>':'')}).join('<br>')||'—')+'</div><div><small>Vəhşi Tırtıllar</small>'+(m.B.slice().sort(function(x,y){return(y===m.gkB)-(x===m.gkB)}).map(function(n){return esc(n)+(n===m.gkB?' <small class="pos">GK</small>':'')}).join('<br>')||'—')+'</div></div>';
+    h+='<div class="gc-d">'+(adm()?'<div class="gc-a"><button class="ghost" onclick="editMatch(\''+m.id+'\')">Düzəlt</button><button class="ghost" onclick="delMatch(\''+m.id+'\')">'+(askDel===m.id?'Əminsiniz? Yenə toxunun':'Sil')+'</button></div>':'')+mb+vidBtn(m)+shBtn(m)+voteBlock(m)+'</div>'}
+  return h+'<button class="btn full gc-b" onclick="gcOpen(\''+m.id+'\')">'+(o?'Bağla':'Düzülüşə bax')+'</button></section>'}
 window.addEventListener('unhandledrejection',function(e){e.preventDefault()});
 tab(location.hash==='#next'?4:2);init();
 </script>
