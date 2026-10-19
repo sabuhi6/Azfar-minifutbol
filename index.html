@@ -958,7 +958,7 @@ var OPEN=null,JUST=null,TGB=false;function tg(id){if(TGB)return;var cur=OPEN&&do
 function tg2(id){OPEN=OPEN===id?null:id;JUST=OPEN;askDel=null;render();var e=document.getElementById('mi'+id);if(e&&OPEN){var r=e.getBoundingClientRect();if(r.top<0||r.top>innerHeight-120)e.scrollIntoView({block:'start',behavior:'smooth'})}}
 function monthName(k){var a=['Yanvar','Fevral','Mart','Aprel','May','İyun','İyul','Avqust','Sentyabr','Oktyabr','Noyabr','Dekabr'],p=(k||'').split('-');return p.length===2?a[+p[1]-1]+' '+p[0]:''}
 var PLOAD=false,GP='',GQ='',GKEY='';
-function gateNeed(){if(T===1)return false;if(DB&&!PLOAD)return'load';if(!S.players.length)return false;return!(ME&&S.players.indexOf(ME)>-1)}
+function gateNeed(){if(T===1)return false;if(DB&&!PLOAD)return ME?false:'load';if(!S.players.length)return false;return!(ME&&S.players.indexOf(ME)>-1)}
 function gate(){var g=document.getElementById('gate');if(!g)return;var nd=gateNeed();
   if(!nd){if(!g.hidden){g.hidden=true;document.body.classList.remove('gated');GKEY=''}return}
   document.body.classList.add('gated');if(g.hidden){g.hidden=false;g.classList.add('show');setTimeout(function(){g.classList.remove('show')},450)}
