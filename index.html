@@ -529,6 +529,10 @@ body{font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif!important;-
 .nm21-c b{font:700 24px/1 "Roboto Condensed",sans-serif}
 .nm21-c em{font-style:normal;color:var(--mute);font-size:16px}
 .nm21-c small{font-size:11px;color:var(--mute)}
+.gc-seg{display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:4px;background:var(--bg);border:1px solid var(--line);border-radius:12px;margin-bottom:10px}
+.gc-seg button{border:0;background:none;color:var(--mute);font:600 13px Inter,system-ui,sans-serif;padding:8px;border-radius:9px}
+.gc-seg button.on{background:var(--g);color:var(--bg)}
+.gc-a{margin:8px 0 0}
 .tlogo{display:inline-block;vertical-align:middle;width:auto;margin:-2px 6px 0 0}
 .pitch .pt .tlogo{margin-right:6px}
 /* 3.0 rəng palitrası (yalnız rənglər) */
@@ -1130,7 +1134,8 @@ function render(){gate();hdr();renderVote();document.getElementById('fab').textC
 var GMS=['yan','fev','mar','apr','may','iyn','iyl','avq','sen','okt','noy','dek'];
 function nm21(){var g=curNext();if(!g)return'';var r=rsvp(g),cl=nClosed(g),p=g.date.split('-');
   return'<button class="card nm21" onclick="tab(4)"><span class="nm21-d"><b>'+(+p[2])+'</b><small>'+GMS[+p[1]-1]+'</small></span><span class="nm21-m"><small>'+(cl?'Səsvermə bitib':'Növbəti oyun')+'</small><b>'+wday(g.date)+(g.h?' · '+esc(g.h):'')+'</b><span>'+esc(g.st||'Stadion')+'</span></span><span class="nm21-c"><b>'+r.main.length+'<em>/'+r.cap+'</em></b><small>gəlir</small></span></button>'}
-function gcOpen(id){if(OPEN===id){OPEN=null;MV=''}else{OPEN=id;MV=id;VD=null}askDel=null;render();var e=document.getElementById('mi'+id);if(e){var r=e.getBoundingClientRect();if(r.top<0||r.top>innerHeight-160)e.scrollIntoView({block:'start',behavior:'smooth'})}}
+var GTAB='d';
+function gcOpen(id){if(OPEN===id){OPEN=null;MV=''}else{OPEN=id;MV=id;VD=null;GTAB='d'}askDel=null;render();var e=document.getElementById('mi'+id);if(e){var r=e.getBoundingClientRect();if(r.top<0||r.top>innerHeight-160)e.scrollIntoView({block:'start',behavior:'smooth'})}}
 function gc21(m,dl){var o=OPEN===m.id,e=m.ev||{},G={A:[],B:[]},wa=m.a>m.b,wb=m.b>m.a;
   Object.keys(e).forEach(function(n){var x=e[n]||[0,0];if(x[0]||x[1])G[(m.B||[]).indexOf(n)>-1?'B':'A'].push([n,x[0]||0,x[1]||0])});
   ['A','B'].forEach(function(t){G[t].sort(function(x,y){return y[1]-x[1]||y[2]-x[2]||x[0].localeCompare(y[0])})});
@@ -1142,8 +1147,9 @@ function gc21(m,dl){var o=OPEN===m.id,e=m.ev||{},G={A:[],B:[]},wa=m.a>m.b,wb=m.b
   else if(vopen(m)&&!o)h+='<button class="gc-mvp" onclick="gcOpen(\''+m.id+'\')"><span class="star">★</span><div><small>Səsvermə açıqdır</small><b>Ən yaxşı oyunçunu seçin</b></div><span class="chev">›</span></button>';
   if(o){var mb=mapBlock(m).replace(/^<button[^>]*>[^<]*<\/button>/,'');
     if(!mb)mb='<div class="sides"><div><small>Səhra Pişikləri</small>'+(m.A.slice().sort(function(x,y){return(y===m.gkA)-(x===m.gkA)}).map(function(n){return esc(n)+(n===m.gkA?' <small class="pos">GK</small>':'')}).join('<br>')||'—')+'</div><div><small>Vəhşi Tırtıllar</small>'+(m.B.slice().sort(function(x,y){return(y===m.gkB)-(x===m.gkB)}).map(function(n){return esc(n)+(n===m.gkB?' <small class="pos">GK</small>':'')}).join('<br>')||'—')+'</div></div>';
-    h+='<div class="gc-d">'+glTL(m)+(adm()?'<div class="gc-a"><button class="ghost" onclick="editMatch(\''+m.id+'\')">Düzəlt</button><button class="ghost" onclick="delMatch(\''+m.id+'\')">'+(askDel===m.id?'Əminsiniz? Yenə toxunun':'Sil')+'</button></div>':'')+mb+vidBtn(m)+shBtn(m)+voteBlock(m)+'</div>'}
-  return h+'<button class="btn full gc-b" onclick="gcOpen(\''+m.id+'\')">'+(o?'Bağla':'Düzülüşə bax')+'</button></section>'}
+    var tl=typeof glTL==='function'?glTL(m):'',dt=tl+vidBtn(m)+shBtn(m)+voteBlock(m)+(adm()?'<div class="gc-a"><button class="ghost" onclick="editMatch(\''+m.id+'\')">Düzəlt</button><button class="ghost" onclick="delMatch(\''+m.id+'\')">'+(askDel===m.id?'Əminsiniz? Yenə toxunun':'Sil')+'</button></div>':'');
+    h+='<div class="gc-d"><div class="gc-seg" role="tablist"><button role="tab" aria-selected="'+(GTAB==='d')+'" class="'+(GTAB==='d'?'on':'')+'" onclick="GTAB=\'d\';render()">Təfsilatlar</button><button role="tab" aria-selected="'+(GTAB==='l')+'" class="'+(GTAB==='l'?'on':'')+'" onclick="GTAB=\'l\';render()">Düzülüş</button></div>'+(GTAB==='l'?mb:dt)+'</div>'}
+  return h+'<button class="btn full gc-b" onclick="gcOpen(\''+m.id+'\')">'+(o?'Bağla':'Ətraflı')+'</button></section>'}
 /* qol xronologiyası (test) */
 function glTeams(){var A=S.players.filter(function(n){return D.sel[n]==='A'}).concat(D.keepA||[]),B=S.players.filter(function(n){return D.sel[n]==='B'}).concat(D.keepB||[]);return{A:A,B:B}}
 function glTeamOf(T,n){return T.B.indexOf(n)>-1?'B':T.A.indexOf(n)>-1?'A':''}
