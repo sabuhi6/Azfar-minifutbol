@@ -535,6 +535,8 @@ body{font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif!important;-
 .gc-a{margin:8px 0 0}
 .tlogo{display:inline-block;vertical-align:middle;width:auto;margin:-2px 6px 0 0}
 .pitch .pt .tlogo{margin-right:6px}
+button.brand{background:none;border:0;padding:0;margin:0;font:inherit;color:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent}
+button.brand:active{transform:scale(.97)}
 /* 3.0 rəng palitrası (yalnız rənglər) */
 :root{color-scheme:dark;--bg:#121417;--card:#1C1F24;--ink:#EDEFF2;--mute:#9AA1AB;--line:#2C3139;--y:#F5B83D;--b:#7FA7D9;--g:#8DBF4F;--red:#FF7A59;--c-ink:#EDEFF2;--c-mute:#9AA1AB;--c-line:#2C3139;--c-bg:#121417}
 html{background:#121417!important}
@@ -705,7 +707,7 @@ input{font-size:16px}
 </style>
 </head>
 <body>
-<header class="top"><div class="tb"><div class="brand"><span class="logo"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 8.2l3.2 2.3-1.2 3.8H10l-1.2-3.8z"/><path d="M12 8.2V3.6M15.2 10.5l4.3-1.6M14 14.3l2.7 3.8M10 14.3l-2.7 3.8M8.8 10.5L4.5 8.9"/></svg></span><b>Minifutbol</b></div><div class="tr"><button id="hme" class="mepl" onclick="setMe('')" hidden aria-label="Adı dəyiş"></button><button id="hadm" class="shd" onclick="fabGo()" aria-label="Admin"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v5.5c0 4.4-3 8-7 9.5-4-1.5-7-5.1-7-9.5V6z"/><path d="M9 12l2 2 4-4"/></svg></button></div></div></header>
+<header class="top"><div class="tb"><button type="button" class="brand" onclick="goHome()" aria-label="Əsas səhifə"><span class="logo"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 8.2l3.2 2.3-1.2 3.8H10l-1.2-3.8z"/><path d="M12 8.2V3.6M15.2 10.5l4.3-1.6M14 14.3l2.7 3.8M10 14.3l-2.7 3.8M8.8 10.5L4.5 8.9"/></svg></span><b>Minifutbol</b></button><div class="tr"><button id="hme" class="mepl" onclick="setMe('')" hidden aria-label="Adı dəyiş"></button><button id="hadm" class="shd" onclick="fabGo()" aria-label="Admin"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v5.5c0 4.4-3 8-7 9.5-4-1.5-7-5.1-7-9.5V6z"/><path d="M9 12l2 2 4-4"/></svg></button></div></div></header>
 <main>
   <section id="v1"></section>
   <section id="v2" hidden></section>
@@ -1131,6 +1133,7 @@ function render(){gate();hdr();renderVote();document.getElementById('fab').textC
     countUp();
   }
 }
+function goHome(){OPEN=null;MV='';PP='';VD=null;askDel=null;if(T===2)render();else tab(2);window.scrollTo({top:0,behavior:'smooth'})}
 var GMS=['yan','fev','mar','apr','may','iyn','iyl','avq','sen','okt','noy','dek'];
 function nm21(){var g=curNext();if(!g)return'';var r=rsvp(g),cl=nClosed(g),p=g.date.split('-');
   return'<button class="card nm21" onclick="tab(4)"><span class="nm21-d"><b>'+(+p[2])+'</b><small>'+GMS[+p[1]-1]+'</small></span><span class="nm21-m"><small>'+(cl?'Səsvermə bitib':'Növbəti oyun')+'</small><b>'+wday(g.date)+(g.h?' · '+esc(g.h):'')+'</b><span>'+esc(g.st||'Stadion')+'</span></span><span class="nm21-c"><b>'+r.main.length+'<em>/'+r.cap+'</em></b><small>gəlir</small></span></button>'}
