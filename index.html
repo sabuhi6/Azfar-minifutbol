@@ -544,6 +544,7 @@ button.brand:active{transform:scale(.97)}
 .gq-r input{flex:1;min-width:0}
 .gq-h{font-size:12px;margin:6px 0 0}
 .nx-p .gtag{text-transform:none!important;letter-spacing:0!important;font-size:10px!important;font-weight:600!important}
+.mvwa{margin-top:10px!important}
 /* 3.0 rəng palitrası (yalnız rənglər) */
 :root{color-scheme:dark;--bg:#121417;--card:#1C1F24;--ink:#EDEFF2;--mute:#9AA1AB;--line:#2C3139;--y:#F5B83D;--b:#7FA7D9;--g:#8DBF4F;--red:#FF7A59;--c-ink:#EDEFF2;--c-mute:#9AA1AB;--c-line:#2C3139;--c-bg:#121417}
 html{background:#121417!important}
@@ -1128,7 +1129,7 @@ function render(){gate();hdr();renderVote();document.getElementById('fab').textC
     var lm='',out='';S.matches.forEach(function(m){var mk=(m.date||'').slice(0,7);if(mk!==lm){if(lm)out+='</div>';out+='<div class="grp"'+dl()+'>'+monthName(mk)+'</div><div class="gcl"'+(en?' style="--d:'+(Math.min(ix,14)*45-el)+'ms"':'')+'>';lm=mk}
       out+=gc21(m,dl());
     });JUST=null;if(lm)out+='</div>';
-    var v2=document.getElementById('v2'),hh=loading()?skel(5):meBar()+pwaBar()+nm21()+(S.matches.length?out:'<p class="empty">Hələ oyun yoxdur.</p>'),hk=hh.replace(/ style="--d:-?\d+ms"/g,'')+(en?'':'·');if(hk!==V2K){V2K=hk;v2.innerHTML=hh}if(en&&!v2.classList.contains('enter')){v2.classList.add('enter');clearTimeout(ENT);ENT=setTimeout(function(){v2.classList.remove('enter');ET0=0},1200-el)}
+    var v2=document.getElementById('v2'),hh=loading()?skel(5):meBar()+pwaBar()+nm21()+(S.matches.length?out:'<p class="empty">Hələ oyun yoxdur.</p>'),hk=hh.replace(/ style="--d:-?\d+ms"/g,'')+(en?'':'·');if(hk!==V2K){V2K=hk;v2.innerHTML=hh}if(DEEP&&MLOAD){var di=DEEP;DEEP=null;setTimeout(function(){var de=document.getElementById('mi'+di);if(de)de.scrollIntoView({block:'start',behavior:'smooth'})},400)}if(en&&!v2.classList.contains('enter')){v2.classList.add('enter');clearTimeout(ENT);ENT=setTimeout(function(){v2.classList.remove('enter');ET0=0},1200-el)}
   }
   if(T===3){
     var st={},MS=S.matches.filter(inPer);
@@ -1209,7 +1210,7 @@ function gc21(m,dl){var o=OPEN===m.id,e=m.ev||{},G={A:[],B:[]},wa=m.a>m.b,wb=m.b
   else if(vopen(m)&&!o)h+='<button class="gc-mvp" onclick="gcOpen(\''+m.id+'\')"><span class="star">★</span><div><small>Səsvermə açıqdır</small><b>Ən yaxşı oyunçunu seçin</b></div><span class="chev">›</span></button>';
   if(o){var mb=mapBlock(m).replace(/^<button[^>]*>[^<]*<\/button>/,'');
     if(!mb)mb='<div class="sides"><div><small>Səhra Pişikləri</small>'+(m.A.slice().sort(function(x,y){return(y===m.gkA)-(x===m.gkA)}).map(function(n){return esc(n)+(n===m.gkA?' <small class="pos">GK</small>':'')}).join('<br>')||'—')+'</div><div><small>Vəhşi Tırtıllar</small>'+(m.B.slice().sort(function(x,y){return(y===m.gkB)-(x===m.gkB)}).map(function(n){return esc(n)+(n===m.gkB?' <small class="pos">GK</small>':'')}).join('<br>')||'—')+'</div></div>';
-    var tl=typeof glTL==='function'?glTL(m):'',dt=tl+vidBtn(m)+shBtn(m)+voteBlock(m)+(adm()?'<div class="gc-a"><button class="ghost" onclick="editMatch(\''+m.id+'\')">Düzəlt</button><button class="ghost" onclick="delMatch(\''+m.id+'\')">'+(askDel===m.id?'Əminsiniz? Yenə toxunun':'Sil')+'</button></div>':'');
+    var tl=typeof glTL==='function'?glTL(m):'',dt=tl+vidBtn(m)+shBtn(m)+voteBlock(m)+mvpWa(m)+(adm()?'<div class="gc-a"><button class="ghost" onclick="editMatch(\''+m.id+'\')">Düzəlt</button><button class="ghost" onclick="delMatch(\''+m.id+'\')">'+(askDel===m.id?'Əminsiniz? Yenə toxunun':'Sil')+'</button></div>':'');
     h+='<div class="gc-d"><div class="gc-seg" role="tablist"><button role="tab" aria-selected="'+(GTAB==='d')+'" class="'+(GTAB==='d'?'on':'')+'" onclick="GTAB=\'d\';render()">Təfsilatlar</button><button role="tab" aria-selected="'+(GTAB==='l')+'" class="'+(GTAB==='l'?'on':'')+'" onclick="GTAB=\'l\';render()">Düzülüş</button></div>'+(GTAB==='l'?mb:dt)+'</div>'}
   return h+'<button class="btn full gc-b" onclick="gcOpen(\''+m.id+'\')">'+(o?'Bağla':'Ətraflı')+'</button></section>'}
 /* qol xronologiyası (test) */
@@ -1235,6 +1236,16 @@ function glTL(m){var gl=m.gl||[];if(!gl.length)return'';var a=0,b=0;
     var ev='<span class="tl-e"><b>⚽ '+esc(g.s)+'</b>'+(g.a?'<small>'+BOOT+' '+esc(g.a)+'</small>':'')+'</span>';
     return'<div class="tl-r '+g.t+'"><span class="tl-s">'+(g.t==='A'?ev:'')+'</span><span class="tl-m"><b>'+g.m+'\'</b><small>'+a+' - '+b+'</small></span><span class="tl-s">'+(g.t==='B'?ev:'')+'</span></div>'}).join('')+'</div>'}
 window.addEventListener('unhandledrejection',function(e){e.preventDefault()});
+/* MVP səsverməsini WhatsApp-da paylaş */
+var DEEP=(location.hash.match(/^#mvp-(.+)$/)||[])[1]||null;if(DEEP){try{DEEP=decodeURIComponent(DEEP)}catch(e){}OPEN=DEEP;MV=DEEP;GTAB='d'}
+function mvpWa(m){if(!DB||!(vopen(m)||(vclosed(m)&&winners(m).mx>0)))return'';return'<button class="btn full wa mvwa" onclick="mvpShare(\''+m.id+'\')">'+(vopen(m)?'Səsverməni WhatsApp-da paylaş':'Nəticəni WhatsApp-da paylaş')+'</button>'}
+function mvpShare(id){var m=S.matches.filter(function(x){return x.id===id})[0];if(!m)return;
+  var link=siteUrl()+'#mvp-'+encodeURIComponent(m.id),when='📅 '+wday(m.date)+', '+dm(m.date)+(m.h?' · '+m.h:''),sc='⚽ Səhra Pişikləri '+m.a+' : '+m.b+' Vəhşi Tırtıllar',t;
+  if(vopen(m)){var vs=VT.filter(function(x){return x.m===m.id}).length,all=m.A.length+m.B.length;
+    t='⭐ Oyunun ən yaxşısını seçək!\n'+when+'\n'+sc+'\n\nKim ən yaxşı oynadı? Burada səs ver 👉 '+link+'\n🗳️ '+vs+' / '+all+' nəfər səs verib'+(m.vend?'\n⏳ Səsvermə bitir: '+hhmm(m.vend):'')}
+  else{var w=winners(m),rk=Object.keys(w.c).sort(function(a,b){return w.c[b]-w.c[a]||a.localeCompare(b)});
+    t='🏆 Oyunun ən yaxşısı: '+w.w.join(', ')+' ('+w.mx+' səs)\n'+when+'\n'+sc+'\n\n'+rk.map(function(n,i){return(i+1)+'. '+n+' — '+w.c[n]+' səs'}).join('\n')+'\n\n'+link}
+  waOpen(t)}
 tab(location.hash==='#next'?4:2);init();
 </script>
 </body>
