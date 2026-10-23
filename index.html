@@ -813,7 +813,7 @@ function voteBlock(m){
   return h;
 }
 var MV='',FM=['2-2-1','1-2-2','2-1-2','1-3-1','3-1-1','2-3','3-2'];
-function snapR(){if(document.activeElement&&document.activeElement.tagName==='SELECT')return;render()}
+function snapR(){if(document.activeElement&&(document.activeElement.tagName==='SELECT'||document.activeElement.id==='rnn'))return;render()}
 function rowsOf(f){var i=1,r=[[0]];(f||'2-2-1').split('-').map(Number).forEach(function(k){var a=[];for(var j=0;j<k;j++)a.push(i++);r.push(a)});return r}
 function togMap(id){MV=MV===id?'':id;rr()}
 function lineEd(t){
@@ -1113,7 +1113,7 @@ function render(){gate();hdr();renderVote();document.getElementById('fab').textC
     var keep=document.activeElement&&document.activeElement.id,kv=(document.getElementById('np')||{}).value||'';
     document.getElementById('v1').innerHTML=h;
     var e=document.getElementById('np');if(e){e.value=kv;if(keep==='np')e.focus()}var ke=keep&&keep!=='np'&&document.getElementById(keep);if(ke){ke.focus();try{ke.setSelectionRange(ke.value.length,ke.value.length)}catch(x){}}
-    if(S.players.length){document.getElementById('v1').insertAdjacentHTML('beforeend','<div style="text-align:center"><button class="ghost" onclick="var i=prompt(\'Silinəcək oyunçunun adı:\');if(i){var k=S.players.indexOf(i.trim());if(k>-1)rmPlayer(k)}">Oyunçunu siyahıdan sil</button></div>')}
+    if(S.players.length){document.getElementById('v1').insertAdjacentHTML('beforeend',rnCard()+'<div style="text-align:center"><button class="ghost" onclick="var i=prompt(\'Silinəcək oyunçunun adı:\');if(i){var k=S.players.indexOf(i.trim());if(k>-1)rmPlayer(k)}">Oyunçunu siyahıdan sil</button></div>')}
   }
   if(T===1&&SES)document.getElementById('v1').insertAdjacentHTML('beforeend','<div style="text-align:center"><button class="ghost" onclick="logout()">Çıxış</button></div>');
   if(T===2){
@@ -1134,6 +1134,42 @@ function render(){gate();hdr();renderVote();document.getElementById('fab').textC
   }
 }
 function goHome(){OPEN=null;MV='';PP='';VD=null;askDel=null;if(T===2)render();else tab(2);window.scrollTo({top:0,behavior:'smooth'})}
+/* oyunçunun adını dəyiş */
+var RN={o:'',n:'',busy:false};
+function rnCard(){return'<div class="card rn"><h2>Oyunçunun adını dəyiş</h2><p class="empty">Bütün oyunları, statistikası, qolları, səsləri və şəkli yeni adla qalır.</p><select id="rno" aria-label="Oyunçu" onchange="RN.o=this.value" style="width:100%"><option value="">Oyunçunu seçin</option>'+S.players.map(function(n){return'<option value="'+esc(n)+'"'+(n===RN.o?' selected':'')+'>'+esc(n)+'</option>'}).join('')+'</select><input id="rnn" placeholder="Yeni ad" value="'+esc(RN.n)+'" oninput="RN.n=this.value" style="width:100%;margin-top:8px"><button class="btn full" '+(RN.busy?'disabled ':'')+'onclick="renamePlayer()">'+(RN.busy?'Dəyişdirilir…':'Adı dəyiş')+'</button></div>'}
+function rnUpsert(col,id,data){return ensure().then(function(){return fetch(CFG.url+'/rest/v1/items?on_conflict=col,id',{method:'POST',headers:H({Prefer:'resolution=merge-duplicates'}),body:JSON.stringify({col:col,id:id,data:data})})}).then(function(r){if(!r.ok)throw r.status;return r})}
+function rnDel(col,id){return ensure().then(function(){return fetch(CFG.url+'/rest/v1/items?col=eq.'+col+'&id=eq.'+encodeURIComponent(id),{method:'DELETE',headers:H()})}).then(function(r){if(!r.ok)throw r.status;return r})}
+function rnMatch(x,o,n){var c=false,d=Object.assign({},x);delete d.id;
+  function a(l){if(!Array.isArray(l))return l;return l.map(function(v){if(v===o){c=true;return n}return v})}
+  ['A','B','lA','lB'].forEach(function(k){if(d[k])d[k]=a(d[k])});
+  ['gkA','gkB'].forEach(function(k){if(d[k]===o){d[k]=n;c=true}});
+  if(d.ev&&d.ev[o]){var e={};Object.keys(d.ev).forEach(function(k){var t=k===o?n:k,v=d.ev[k]||[0,0];if(e[t])e[t]=[(e[t][0]||0)+(v[0]||0),(e[t][1]||0)+(v[1]||0)];else e[t]=[v[0]||0,v[1]||0]});d.ev=e;c=true}
+  if(Array.isArray(d.gl))d.gl=d.gl.map(function(g){var y=Object.assign({},g);if(y.s===o){y.s=n;c=true}if(y.a===o){y.a=n;c=true}return y});
+  return c?d:null}
+function renamePlayer(){
+  if(RN.busy||!DB)return;var o=RN.o,n=(RN.n||'').trim().replace(/\s+/g,' ');
+  if(!o||S.players.indexOf(o)<0)return alert('Adı dəyişiləcək oyunçunu seçin.');
+  if(!n)return alert('Yeni adı yazın.');
+  if(n===o)return alert('Yeni ad köhnə ilə eynidir.');
+  if(S.players.some(function(p){return p!==o&&p.toLowerCase()===n.toLowerCase()}))return alert('"'+n+'" adlı oyunçu artıq var. Başqa ad yazın (məsələn soyadın ilk hərfi ilə).');
+  if(!confirm('"'+o+'" → "'+n+'"\n\nBütün oyunlarda, statistikada və səslərdə ad dəyişəcək. Davam edilsin?'))return;
+  RN.busy=true;render();
+  var mj=[],done=[],side=[],sf=0;
+  NX.concat(PX,S.matches).forEach(function(x){var d=rnMatch(x,o,n);if(d){var orig=Object.assign({},x);delete orig.id;mj.push({id:x.id,d:d,orig:orig})}});
+  VT.forEach(function(v){if(v.r!==o&&v.v!==o)return;var d=v.k==='rsvp'?{k:'rsvp',g:v.g,r:v.r===o?n:v.r,v:v.v,t:v.t}:{m:v.m,r:v.r===o?n:v.r,v:v.v===o?n:v.v,t:v.t};side.push(function(){return rnUpsert('votes',v.id,d)})});
+  if(PH[o]){var img=PH[o];side.push(function(){return rnUpsert('photos',n,{img:img}).then(function(){return rnDel('photos',o)})})}
+  function seq(l,f){return l.reduce(function(p,x){return p.then(function(){return f(x)})},Promise.resolve())}
+  // 1) oyunlar (vacib): biri alınmasa, dəyişənləri geri qaytar
+  seq(mj,function(x){return rnUpsert('matches',x.id,x.d).then(function(){done.push(x)})})
+  .then(function(){return rnUpsert('players',PID[o],{name:n,t:TS[o],p:POS[o]||''})},function(e){
+    return seq(done,function(x){return rnUpsert('matches',x.id,x.orig).catch(function(){})}).then(function(){throw e})})
+  // 2) səslər və şəkil (ikinci dərəcəli)
+  .then(function(){return seq(side,function(f){return f().catch(function(){sf++})})})
+  .then(function(){
+    if(ME===o)setMe(n);D={date:today(),sel:{},a:'',b:''};RN={o:'',n:'',busy:false};poll();loadPh();
+    alert('Ad dəyişdirildi: '+o+' → '+n+(sf?'\n\nQeyd: '+sf+' səs/şəkil qeydini dəyişmək alınmadı, onlarda köhnə ad qalıb.':''));
+  },function(){RN.busy=false;render();poll();alert('Adı dəyişmək alınmadı, heç nə dəyişdirilmədi. İnterneti yoxlayıb yenidən cəhd edin.')})
+}
 var GMS=['yan','fev','mar','apr','may','iyn','iyl','avq','sen','okt','noy','dek'];
 function nm21(){var g=curNext();if(!g)return'';var r=rsvp(g),cl=nClosed(g),p=g.date.split('-');
   return'<button class="card nm21" onclick="tab(4)"><span class="nm21-d"><b>'+(+p[2])+'</b><small>'+GMS[+p[1]-1]+'</small></span><span class="nm21-m"><small>'+(cl?'Səsvermə bitib':'Növbəti oyun')+'</small><b>'+wday(g.date)+(g.h?' · '+esc(g.h):'')+'</b><span>'+esc(g.st||'Stadion')+'</span></span><span class="nm21-c"><b>'+r.main.length+'<em>/'+r.cap+'</em></b><small>gəlir</small></span></button>'}
