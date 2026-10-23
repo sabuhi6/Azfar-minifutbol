@@ -537,6 +537,13 @@ body{font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif!important;-
 .pitch .pt .tlogo{margin-right:6px}
 button.brand{background:none;border:0;padding:0;margin:0;font:inherit;color:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent}
 button.brand:active{transform:scale(.97)}
+.gtag{font-size:10px;font-weight:600;color:var(--mute);border:1px solid var(--line);border-radius:6px;padding:0 4px;margin-left:2px;vertical-align:1px}
+.chip.A .gtag,.chip.B .gtag{color:inherit;border-color:currentColor;opacity:.75}
+.gx{border:0;background:none;color:var(--mute);font-size:12px;padding:0 0 0 6px;cursor:pointer}
+.gq-r{display:flex;gap:8px;margin-top:14px;padding-top:12px;border-top:1px solid var(--line)}
+.gq-r input{flex:1;min-width:0}
+.gq-h{font-size:12px;margin:6px 0 0}
+.nx-p .gtag{text-transform:none!important;letter-spacing:0!important;font-size:10px!important;font-weight:600!important}
 /* 3.0 rəng palitrası (yalnız rənglər) */
 :root{color-scheme:dark;--bg:#121417;--card:#1C1F24;--ink:#EDEFF2;--mute:#9AA1AB;--line:#2C3139;--y:#F5B83D;--b:#7FA7D9;--g:#8DBF4F;--red:#FF7A59;--c-ink:#EDEFF2;--c-mute:#9AA1AB;--c-line:#2C3139;--c-bg:#121417}
 html{background:#121417!important}
@@ -813,11 +820,11 @@ function voteBlock(m){
   return h;
 }
 var MV='',FM=['2-2-1','1-2-2','2-1-2','1-3-1','3-1-1','2-3','3-2'];
-function snapR(){if(document.activeElement&&(document.activeElement.tagName==='SELECT'||document.activeElement.id==='rnn'))return;render()}
+function snapR(){if(document.activeElement&&(document.activeElement.tagName==='SELECT'||document.activeElement.id==='rnn'||document.activeElement.id==='gqn'))return;render()}
 function rowsOf(f){var i=1,r=[[0]];(f||'2-2-1').split('-').map(Number).forEach(function(k){var a=[];for(var j=0;j<k;j++)a.push(i++);r.push(a)});return r}
 function togMap(id){MV=MV===id?'':id;rr()}
 function lineEd(t){
-  var f=D['f'+t]||'2-2-1',L=D['ln'+t]||[],pl=S.players.filter(function(n){return D.sel[n]===t}).concat((t==='A'?D.keepA:D.keepB)||[]);
+  var f=D['f'+t]||'2-2-1',L=D['ln'+t]||[],pl=SG().filter(function(n){return D.sel[n]===t}).concat((t==='A'?D.keepA:D.keepB)||[]);
   var h='<div class="lined"><div class="cnt"><b>'+(t==='A'?'Səhra Pişikləri':'Vəhşi Tırtıllar')+' düzülüşü</b><select onchange="D.f'+t+'=this.value;rr()">'+FM.map(function(x){return'<option'+(x===f?' selected':'')+'>'+x+'</option>'}).join('')+'</select></div>';
   rowsOf(f).forEach(function(r){h+='<div class="lrow">'+r.map(function(ix){var cur=L[ix]||'';return'<select onchange="D.ln'+t+'=D.ln'+t+'||[];D.ln'+t+'['+ix+']=this.value;rr()"><option value="">'+(ix===0?'Qapıçı':'—')+'</option>'+pl.filter(function(n){return n===cur||L.indexOf(n)<0}).map(function(n){return'<option'+(n===cur?' selected':'')+' value="'+esc(n)+'">'+esc(n)+'</option>'}).join('')+'</select>'}).join('')+'</div>'});
   return h+'</div>'
@@ -874,7 +881,7 @@ var EL=[],SK='w';
 function mkEv(e,ok){var o={};Object.keys(e||{}).forEach(function(n){var x=e[n];if(ok.indexOf(n)>-1&&((x[0]||0)||(x[1]||0)))o[n]=[x[0]||0,x[1]||0]});return o}
 function evd(i,k,d){var n=EL[i];D.ev=D.ev||{};var x=D.ev[n]||[0,0];x[k]=Math.max(0,(x[k]||0)+d);D.ev[n]=x;rr()}
 function evForm(){
-  var A=S.players.filter(function(n){return D.sel[n]==='A'}).concat(D.keepA||[]),B=S.players.filter(function(n){return D.sel[n]==='B'}).concat(D.keepB||[]);
+  var A=SG().filter(function(n){return D.sel[n]==='A'}).concat(D.keepA||[]),B=SG().filter(function(n){return D.sel[n]==='B'}).concat(D.keepB||[]);
   EL=A.concat(B);if(!EL.length)return'';
   function g(l){return l.reduce(function(p,n){return p+(((D.ev||{})[n]||[0])[0]||0)},0)}
   function blk(l,off,t,sc){if(!l.length)return'';return'<div class="evt'+(t==='Vəhşi Tırtıllar'?' B':'')+'"><b>'+t+'</b><small>qollar: '+g(l)+(sc!==''&&sc!=null?' / hesab '+sc:'')+'</small></div><div class="evrow evh"><span></span><span class="stp"><small>Qol</small></span><span class="stp"><small>Ötürmə</small></span></div>'+l.map(function(n,j){var i=off+j,x=(D.ev||{})[n]||[0,0];return'<div class="evrow"><span>'+esc(n)+'</span>'+[0,1].map(function(k){return'<span class="stp"><button onclick="evd('+i+','+k+',-1)">−</button><b>'+(x[k]||0)+'</b><button onclick="evd('+i+','+k+',1)">+</button></span>'}).join('')+'</div>'}).join('')}
@@ -967,15 +974,15 @@ function periodBar(){var ys={},ms={};S.matches.forEach(function(m){var d=m.date|
 function sortBar(){return'<div class="chips"><small class="lb">Sıralama</small>'+[['w','Qələbə'],['g','Qol'],['a','Ötürmə']].map(function(o){return'<button class="chip'+(SK===o[0]?' A':'')+'" onclick="SK=\''+o[0]+'\';rr()">'+o[1]+'</button>'}).join('')+'</div>'}
 function vidBtn(m){return /^https:\/\/(t|telegram)\.me\//.test(m.vid||'')?'<a class="btn full" style="display:block;text-align:center;text-decoration:none" href="'+esc(m.vid)+'" target="_blank" rel="noopener">Çəkilişə bax</a>':''}
 function stOpts(){var u={};S.matches.forEach(function(m){if(m.st)u[m.st]=1});return Object.keys(u).map(function(k){return'<option value="'+esc(k)+'">'}).join('')}
-function gkSel(t){var l=S.players.filter(function(n){return D.sel[n]===t}).concat((t==='A'?D.keepA:D.keepB)||[]);var v=t==='A'?D.gkA:D.gkB;return '<select onchange="D.gk'+t+'=this.value"><option value="">—</option>'+l.map(function(n){return'<option'+(n===v?' selected':'')+' value="'+esc(n)+'">'+esc(n)+'</option>'}).join('')+'</select>'}
+function gkSel(t){var l=SG().filter(function(n){return D.sel[n]===t}).concat((t==='A'?D.keepA:D.keepB)||[]);var v=t==='A'?D.gkA:D.gkB;return '<select onchange="D.gk'+t+'=this.value"><option value="">—</option>'+l.map(function(n){return'<option'+(n===v?' selected':'')+' value="'+esc(n)+'">'+esc(n)+'</option>'}).join('')+'</select>'}
 function cyc(i){var n=S.players[i],c=D.sel[n];if(EM){if(DB&&PID[n]){var nx=PL[(PL.indexOf(POS[n]||'')+1)%PL.length];DB.collection('players').doc(PID[n]).set({name:n,t:TS[n],p:nx})}return}if(!c)D.sel[n]='A';else if(c==='A')D.sel[n]='B';else delete D.sel[n];render()}
 function rmPlayer(i){var n=S.players[i];delete D.sel[n];if(DB&&PID[n])DB.collection('players').doc(PID[n]).delete();else{S.players.splice(i,1);save();render()}}
 function saveMatch(){
-  var A=[],B=[];S.players.forEach(function(n){if(D.sel[n]==='A')A.push(n);if(D.sel[n]==='B')B.push(n)});
+  var A=[],B=[];SG().forEach(function(n){if(D.sel[n]==='A')A.push(n);if(D.sel[n]==='B')B.push(n)});
   if(D.a===''||D.b==='')return alert('Hesabı yazın');
   var inA=A.concat(D.keepA||[]),inB=B.concat(D.keepB||[]),sl=function(x,ok){return[0,1,2,3,4,5].map(function(i){var n=(x||[])[i]||'';return ok.indexOf(n)>-1?n:''})},lA=sl(D.lnA,inA),lB=sl(D.lnB,inB),glo=glClean(D.gl,{A:inA,B:inB}),evo=glo.length?glEv(glo):mkEv(D.ev,inA.concat(inB)),gA=lA[0],gB=lB[0],tt=D.t||Date.now(),m={date:D.date,A:A.concat(D.keepA||[]),B:B.concat(D.keepB||[]),a:+D.a,b:+D.b,gkA:gA,gkB:gB,fA:D.fA||'2-2-1',fB:D.fB||'2-2-1',lA:lA,lB:lB,ev:evo,gl:glo,st:(D.st||'').trim(),h:D.h||'',vid:(D.vid||'').trim(),t:tt},id=D.editId||'m'+tt;if(D.vote)m.vote=D.vote;if(D.vend)m.vend=D.vend;var fnx=D.fromNext,done=function(){if(fnx)finishNext(fnx,id);D={date:today(),sel:{},a:'',b:'',st:m.st,h:m.h};tab(2)};if(DB){if(saveMatch.busy)return;saveMatch.busy=true;DB.collection('matches').doc(id).set(m).then(function(){saveMatch.busy=false;done()},function(){saveMatch.busy=false})}else{m.id=id;S.matches.unshift(m);save();done()}
 }
-function editMatch(id){var m=S.matches.filter(function(x){return x.id===id})[0];if(!m)return;D={date:m.date,sel:{},a:m.a,b:m.b,editId:id,t:m.t,lnA:m.lA||(m.gkA?[m.gkA]:[]),lnB:m.lB||(m.gkB?[m.gkB]:[]),fA:m.fA||'2-2-1',fB:m.fB||'2-2-1',gkA:m.gkA||'',gkB:m.gkB||'',st:m.st||'',h:m.h||'',vid:m.vid||'',ev:JSON.parse(JSON.stringify(m.ev||{})),gl:JSON.parse(JSON.stringify(m.gl||[])),vote:m.vote,vend:m.vend,keepA:m.A.filter(function(n){return S.players.indexOf(n)<0}),keepB:m.B.filter(function(n){return S.players.indexOf(n)<0})};m.A.forEach(function(n){D.sel[n]='A'});m.B.forEach(function(n){D.sel[n]='B'});tab(1);window.scrollTo(0,0)}
+function editMatch(id){var m=S.matches.filter(function(x){return x.id===id})[0];if(!m)return;D={date:m.date,sel:{},a:m.a,b:m.b,editId:id,t:m.t,lnA:m.lA||(m.gkA?[m.gkA]:[]),lnB:m.lB||(m.gkB?[m.gkB]:[]),fA:m.fA||'2-2-1',fB:m.fB||'2-2-1',gkA:m.gkA||'',gkB:m.gkB||'',st:m.st||'',h:m.h||'',vid:m.vid||'',ev:JSON.parse(JSON.stringify(m.ev||{})),gl:JSON.parse(JSON.stringify(m.gl||[])),vote:m.vote,vend:m.vend,keepA:m.A.filter(function(n){return S.players.indexOf(n)<0&&!isG(n)}),keepB:m.B.filter(function(n){return S.players.indexOf(n)<0&&!isG(n)})};m.A.forEach(function(n){D.sel[n]='A'});m.B.forEach(function(n){D.sel[n]='B'});tab(1);window.scrollTo(0,0)}
 function cancelEdit(){D={date:today(),sel:{},a:'',b:''};tab(2)}
 function delMatch(id){if(askDel!==id){askDel=id;return render()}askDel=null;if(DB)DB.collection('matches').doc(id).delete();else{S.matches=S.matches.filter(function(m){return m.id!==id});save();render()}}
 var OPEN=null,JUST=null,TGB=false;function tg(id){if(TGB)return;var cur=OPEN&&document.querySelector('.md');if(cur&&!matchMedia('(prefers-reduced-motion: reduce)').matches){TGB=true;cur.classList.add('closing');var ch=document.querySelector('.mi.open');if(ch)ch.classList.add('closing');setTimeout(function(){TGB=false;tg2(id)},200);return}tg2(id)}
@@ -1021,7 +1028,7 @@ function rsvp(g){var last={};VT.filter(function(x){return x.k==='rsvp'&&x.g===g.
   var ins=[],outs=[];Object.keys(last).forEach(function(n){(last[n].v==='in'?ins:outs).push(last[n])});
   ins.sort(function(a,b){return a.t-b.t});var cap=+g.cap||12;
   var inN=ins.map(function(x){return x.r}),res=S.players.filter(function(n){return!last[n]});
-  return{main:inN.slice(0,cap),bench:inN.slice(cap),out:outs.map(function(x){return x.r}),none:res,me:ME&&last[ME]?last[ME].v:'',cap:cap}}
+  return{main:inN.slice(0,cap),bench:inN.slice(cap),out:outs.filter(function(x){return!isG(x.r)}).map(function(x){return x.r}),none:res,me:ME&&last[ME]?last[ME].v:'',cap:cap}}
 function siteUrl(){return location.href.split('#')[0]}
 function gLine(g){return wday(g.date)+', '+dm(g.date)+(g.h?' · '+g.h:'')}
 function waOpen(t){window.open('https://wa.me/?text='+encodeURIComponent(t),'_blank')}
@@ -1038,9 +1045,9 @@ function nextCard(){var g=curNext(),A=adm()&&!!SES;
   h+='<div class="nx-cnt"><b>'+r.main.length+'</b>/'+r.cap+' gəlir'+(r.bench.length?' <small>+'+r.bench.length+' ehtiyat</small>':'')+'</div><div class="bar nx-bar"><b style="width:'+pc+'%"></b></div>';
   if(!cl){if(!ME)h+='<p class="empty">Səs vermək üçün yuxarıda adınızı seçin.</p>';
     else h+='<div class="nx-btns"><button class="nx-in'+(r.me==='in'?' on':'')+'" onclick="sendRsvp(\'in\')">✓ Gəlirəm</button><button class="nx-out'+(r.me==='out'?' on':'')+'" onclick="sendRsvp(\'out\')">✕ Gəlmirəm</button></div>'+(r.me?'<p class="nx-me">Sizin cavab: <b>'+(r.me==='in'?(r.bench.indexOf(ME)>-1?'gəlirəm (ehtiyatda)':'gəlirəm'):'gəlmirəm')+'</b>. Fikrinizi dəyişə bilərsiniz.</p>':'')}
-  function grp(t,l,c){return l.length?'<div class="nx-g"><small>'+t+' · '+l.length+'</small><div class="nx-ch">'+l.map(function(n,i){return'<span class="nx-p '+c+(n===ME?' me':'')+'">'+(c==='i'?'<em>'+(i+1)+'</em>':'')+esc(n)+'</span>'}).join('')+'</div></div>':''}
+  function grp(t,l,c){return l.length?'<div class="nx-g"><small>'+t+' · '+l.length+'</small><div class="nx-ch">'+l.map(function(n,i){return'<span class="nx-p '+c+(n===ME?' me':'')+'">'+(c==='i'?'<em>'+(i+1)+'</em>':'')+gName(n,A&&c!=='o')+'</span>'}).join('')+'</div></div>':''}
   h+=grp(cl?'Heyət':'Gəlir',r.main,'i')+grp('Ehtiyat',r.bench,'b')+grp('Gəlmir',r.out,'o')+(cl?'':grp('Cavab verməyib',r.none,'n'));
-  if(A)h+='<div class="nx-adm"><button class="btn wa" onclick="waInvite()">WhatsApp-da çağır</button><button class="btn wa" onclick="waLineup()">Heyəti göndər</button></div><div class="nx-adm2"><button class="ghost" onclick="ngClose(\''+g.id+'\','+(cl?0:1)+')">'+(cl?'Səsverməni yenidən aç':'Səsverməni bağla')+'</button><button class="ghost" onclick="ngEdit()">Düzəlt</button><button class="ghost" onclick="nextToMatch()">Hesabı yaz</button><button class="ghost" onclick="ngDel(\''+g.id+'\')">'+(askDel==='nx'+g.id?'Əminsiniz?':'Sil')+'</button></div><button class="btn full nx-newb'+(cl?'':' sec')+'" onclick="ngNew()">+ Yeni səsvermə aç</button>';
+  if(A)h+=''+gqRow()+'<div class="nx-adm"><button class="btn wa" onclick="waInvite()">WhatsApp-da çağır</button><button class="btn wa" onclick="waLineup()">Heyəti göndər</button></div><div class="nx-adm2"><button class="ghost" onclick="ngClose(\''+g.id+'\','+(cl?0:1)+')">'+(cl?'Səsverməni yenidən aç':'Səsverməni bağla')+'</button><button class="ghost" onclick="ngEdit()">Düzəlt</button><button class="ghost" onclick="nextToMatch()">Hesabı yaz</button><button class="ghost" onclick="ngDel(\''+g.id+'\')">'+(askDel==='nx'+g.id?'Əminsiniz?':'Sil')+'</button></div><button class="btn full nx-newb'+(cl?'':' sec')+'" onclick="ngNew()">+ Yeni səsvermə aç</button>';
   return h+'</div>'}
 
 var LOCS=[];
@@ -1108,7 +1115,7 @@ function render(){gate();hdr();renderVote();document.getElementById('fab').textC
   if(T===1&&!adm()){if(!document.getElementById('le'))document.getElementById('v1').innerHTML='<div class="card"><h2>Admin girişi</h2><p class="empty">Oyun əlavə etmək və düzəltmək üçün daxil olun.</p><input id="le" type="text" placeholder="İstifadəçi adı" autocapitalize="off" autocomplete="username" style="width:100%"><input id="lp" type="password" placeholder="Parol" style="width:100%;margin-top:8px" onkeydown="if(event.key===\'Enter\')login()"><button class="btn full" onclick="login()">Daxil ol</button></div>'}
   else if(T===1){
     var h=ngForm()+'<div class="card"><h2>Oyunçular</h2><div class="row"><input id="np" placeholder="Oyunçunun adı" onkeydown="if(event.key===\'Enter\')addPlayer()"><button class="btn" onclick="addPlayer()">Əlavə et</button></div>';
-    h+=S.players.length?(D.pool?'<p class="empty" style="margin:8px 0 0"><span class="chip in" style="padding:1px 8px;font-size:12px">yaşıl</span> — gələcəyini bildirənlər</p>':'')+'<div class="chips">'+S.players.map(function(n,i){return'<button class="chip '+(D.sel[n]||'')+(D.pool&&D.pool.indexOf(n)>-1&&!D.sel[n]?' in':'')+'" onclick="cyc('+i+')">'+esc(n)+'</button>'}).join('')+'</div><div class="cnt"><span>'+tlogo('A',18)+'Səhra Pişikləri <b>'+cnt('A')+'/6</b></span><span>'+tlogo('B',18)+'Vəhşi Tırtıllar <b>'+cnt('B')+'/6</b></span></div><p class="empty">Adın üstünə toxun: Səhra Pişikləri → Vəhşi Tırtıllar → heç biri.</p>':'<p class="empty">Əvvəlcə 12 oyunçunun adını əlavə edin. Bir dəfə yazmaq kifayətdir.</p>';
+    h+=S.players.length?(D.pool?'<p class="empty" style="margin:8px 0 0"><span class="chip in" style="padding:1px 8px;font-size:12px">yaşıl</span> — gələcəyini bildirənlər</p>':'')+'<div class="chips">'+S.players.map(function(n,i){return'<button class="chip '+(D.sel[n]||'')+(D.pool&&D.pool.indexOf(n)>-1&&!D.sel[n]?' in':'')+'" onclick="cyc('+i+')">'+esc(n)+'</button>'}).join('')+gChips()+'</div><div class="cnt"><span>'+tlogo('A',18)+'Səhra Pişikləri <b>'+cnt('A')+'/6</b></span><span>'+tlogo('B',18)+'Vəhşi Tırtıllar <b>'+cnt('B')+'/6</b></span></div><p class="empty">Adın üstünə toxun: Səhra Pişikləri → Vəhşi Tırtıllar → heç biri.</p>':'<p class="empty">Əvvəlcə 12 oyunçunun adını əlavə edin. Bir dəfə yazmaq kifayətdir.</p>';
     h+='</div><div class="card"><h2>'+(D.editId?'Oyunu düzəlt':'Oyunun hesabı')+'</h2><div class="row"><input type="date" id="dt" value="'+D.date+'" onchange="D.date=this.value">'+tsel('tmx',D.h,'D','h')+'</div><input id="stx" list="stl" placeholder="Stadion" value="'+esc(D.st||'')+'" oninput="D.st=this.value" style="width:100%;margin-top:8px"><datalist id="stl">'+stOpts()+'</datalist><input id="vdx" placeholder="Telegram video linki (istəyə bağlı)" value="'+esc(D.vid||'')+'" oninput="D.vid=this.value" style="width:100%;margin-top:8px">'+lineEd('A')+lineEd('B')+'<div class="score"><input type="number" inputmode="numeric" min="0" id="sa" value="'+D.a+'" oninput="D.a=this.value"><span>:</span><input type="number" inputmode="numeric" min="0" id="sb" value="'+D.b+'" oninput="D.b=this.value"></div>'+evForm()+'<button class="btn full" onclick="saveMatch()">'+(D.editId?'Dəyişiklikləri saxla':'Oyunu yadda saxla')+'</button>'+(D.editId?'<button class="ghost" style="width:100%;margin-top:6px" onclick="cancelEdit()">Ləğv et</button>':'')+'</div>';
     var keep=document.activeElement&&document.activeElement.id,kv=(document.getElementById('np')||{}).value||'';
     document.getElementById('v1').innerHTML=h;
@@ -1125,7 +1132,7 @@ function render(){gate();hdr();renderVote();document.getElementById('fab').textC
   }
   if(T===3){
     var st={},MS=S.matches.filter(inPer);
-    MS.forEach(function(m){[['A',m.a,m.b],['B',m.b,m.a]].forEach(function(s){(m[s[0]]).forEach(function(n){var r=st[n]=st[n]||{p:0,w:0,d:0,l:0};r.p++;if(n===m['gk'+s[0]])r.g=(r.g||0)+1;if(s[1]>s[2])r.w++;else if(s[1]===s[2])r.d++;else r.l++})})});
+    MS.forEach(function(m){[['A',m.a,m.b],['B',m.b,m.a]].forEach(function(s){(m[s[0]]).forEach(function(n){if(isG(n))return;var r=st[n]=st[n]||{p:0,w:0,d:0,l:0};r.p++;if(n===m['gk'+s[0]])r.g=(r.g||0)+1;if(s[1]>s[2])r.w++;else if(s[1]===s[2])r.d++;else r.l++})})});
     var bc={};MS.forEach(function(m){if(vclosed(m))winners(m).w.forEach(function(n){bc[n]=(bc[n]||0)+1})});
     var gl={},as={};MS.forEach(function(m){Object.keys(m.ev||{}).forEach(function(n){gl[n]=(gl[n]||0)+(m.ev[n][0]||0);as[n]=(as[n]||0)+(m.ev[n][1]||0)})});
     var rows=Object.keys(st).sort(function(x,y){if(SK==='g')return(gl[y]||0)-(gl[x]||0)||st[y].w-st[x].w;if(SK==='a')return(as[y]||0)-(as[x]||0)||st[y].w-st[x].w;return st[y].w-st[x].w||st[y].p-st[x].p});
@@ -1170,6 +1177,22 @@ function renamePlayer(){
     alert('Ad dəyişdirildi: '+o+' → '+n+(sf?'\n\nQeyd: '+sf+' səs/şəkil qeydini dəyişmək alınmadı, onlarda köhnə ad qalıb.':''));
   },function(){RN.busy=false;render();poll();alert('Adı dəyişmək alınmadı, heç nə dəyişdirilmədi. İnterneti yoxlayıb yenidən cəhd edin.')})
 }
+/* qonaq oyunçular */
+var GSUF=' (qonaq)';
+function isG(n){return typeof n==='string'&&n.slice(-GSUF.length)===GSUF}
+function SG(){var g=Object.keys(D.sel||{}).filter(function(n){return isG(n)&&S.players.indexOf(n)<0});return S.players.concat(g)}
+function gPool(){return(D.pool||[]).filter(function(n){return isG(n)&&!D.sel[n]})}
+function cycG(n){var c=D.sel[n];if(!c)D.sel[n]='A';else if(c==='A')D.sel[n]='B';else delete D.sel[n];render()}
+function gChips(){var l=SG().filter(isG).concat(gPool());if(!l.length)return'';return l.map(function(n){return'<button class="chip '+(D.sel[n]||'')+(D.pool&&D.pool.indexOf(n)>-1&&!D.sel[n]?' in':'')+'" onclick="cycG(decodeURIComponent(\''+encodeURIComponent(n).replace(/'/g,'%27')+'\'))">'+esc(n.slice(0,-GSUF.length))+' <small class="gtag">qonaq</small></button>'}).join('')}
+function gqRow(){return'<div class="gq-r"><input id="gqn" placeholder="Qonağın adı" autocomplete="off" onkeydown="if(event.key===\'Enter\')addGuest()"><button class="btn" onclick="addGuest()">+ Qonaq</button></div><p class="empty gq-h">Qonaq yalnız bu oyunun siyahısına düşür, oyunçular siyahısına və statistikaya düşmür.</p>'}
+function gRsvp(n,v){var g=curNext();if(!g||RB)return;RB=true;var t=Date.now(),id='rsvp__'+g.id+'__'+n+'__'+t,rec={k:'rsvp',g:g.id,r:n,v:v,t:t};
+  VT.push({id:id,k:'rsvp',g:g.id,r:n,v:v,t:t});rr();
+  fetch(CFG.url+'/rest/v1/items',{method:'POST',headers:H(),body:JSON.stringify({col:'votes',id:id,data:rec})}).then(function(r){RB=false;if(!r.ok&&r.status!==409){VT=VT.filter(function(x){return x.id!==id});rr();alert('Göndərmək alınmadı (xəta '+r.status+'). Yenidən cəhd edin.')}else poll()}).catch(function(){RB=false;VT=VT.filter(function(x){return x.id!==id});rr();alert('Bağlantı alınmadı. İnterneti yoxlayın.')})}
+function addGuest(){var e=document.getElementById('gqn'),b=((e&&e.value)||'').trim().replace(/\s+/g,' ').replace(/\s*\(qonaq\)$/i,'');if(!b)return alert('Qonağın adını yazın.');
+  var n=b+GSUF,g=curNext();if(!g)return;var r=rsvp(g);if(r.main.concat(r.bench).some(function(x){return x.toLowerCase()===n.toLowerCase()}))return alert('"'+b+'" adlı qonaq artıq siyahıdadır.');
+  if(e)e.value='';gRsvp(n,'in')}
+function rmGuest(n){if(!confirm('"'+n.slice(0,-GSUF.length)+'" qonağı siyahıdan çıxarılsın?'))return;gRsvp(n,'out')}
+function gName(n,adm){return isG(n)?esc(n.slice(0,-GSUF.length))+' <small class="gtag">qonaq</small>'+(adm?'<button class="gx" aria-label="Qonağı çıxar" onclick="event.stopPropagation();rmGuest(decodeURIComponent(\''+encodeURIComponent(n).replace(/'/g,'%27')+'\'))">✕</button>':''):esc(n)}
 var GMS=['yan','fev','mar','apr','may','iyn','iyl','avq','sen','okt','noy','dek'];
 function nm21(){var g=curNext();if(!g)return'';var r=rsvp(g),cl=nClosed(g),p=g.date.split('-');
   return'<button class="card nm21" onclick="tab(4)"><span class="nm21-d"><b>'+(+p[2])+'</b><small>'+GMS[+p[1]-1]+'</small></span><span class="nm21-m"><small>'+(cl?'Səsvermə bitib':'Növbəti oyun')+'</small><b>'+wday(g.date)+(g.h?' · '+esc(g.h):'')+'</b><span>'+esc(g.st||'Stadion')+'</span></span><span class="nm21-c"><b>'+r.main.length+'<em>/'+r.cap+'</em></b><small>gəlir</small></span></button>'}
@@ -1190,7 +1213,7 @@ function gc21(m,dl){var o=OPEN===m.id,e=m.ev||{},G={A:[],B:[]},wa=m.a>m.b,wb=m.b
     h+='<div class="gc-d"><div class="gc-seg" role="tablist"><button role="tab" aria-selected="'+(GTAB==='d')+'" class="'+(GTAB==='d'?'on':'')+'" onclick="GTAB=\'d\';render()">Təfsilatlar</button><button role="tab" aria-selected="'+(GTAB==='l')+'" class="'+(GTAB==='l'?'on':'')+'" onclick="GTAB=\'l\';render()">Düzülüş</button></div>'+(GTAB==='l'?mb:dt)+'</div>'}
   return h+'<button class="btn full gc-b" onclick="gcOpen(\''+m.id+'\')">'+(o?'Bağla':'Ətraflı')+'</button></section>'}
 /* qol xronologiyası (test) */
-function glTeams(){var A=S.players.filter(function(n){return D.sel[n]==='A'}).concat(D.keepA||[]),B=S.players.filter(function(n){return D.sel[n]==='B'}).concat(D.keepB||[]);return{A:A,B:B}}
+function glTeams(){var A=SG().filter(function(n){return D.sel[n]==='A'}).concat(D.keepA||[]),B=SG().filter(function(n){return D.sel[n]==='B'}).concat(D.keepB||[]);return{A:A,B:B}}
 function glTeamOf(T,n){return T.B.indexOf(n)>-1?'B':T.A.indexOf(n)>-1?'A':''}
 function glAdd(){D.gl=D.gl||[];var l=D.gl[D.gl.length-1];D.gl.push({m:'',s:'',a:''});rr()}
 function glDel(i){D.gl.splice(i,1);rr()}
