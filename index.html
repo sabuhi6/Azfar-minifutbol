@@ -757,7 +757,7 @@ function init(){
   var db=DB=mkDb();S={players:[],matches:[]};setTimeout(function(){if(!MLOAD){MSLOW=true;render()}},12000);render();
   db.collection('players').onSnapshot(function(q){var l=q.docs.map(function(d){var x=d.data();return{id:d.id,n:x.name,t:x.t||0}}).sort(function(a,b){return a.t-b.t});S.players=l.map(function(x){return x.n});PID={};POS={};TS={};l.forEach(function(x){PID[x.n]=x.id;POS[x.n]=x.p||'';TS[x.n]=x.t});PLOAD=true;snapR()});
   db.collection('matches').onSnapshot(function(q){var all=q.docs.map(function(d){var x=d.data();x.id=d.id;return x});NX=all.filter(function(x){return x.up&&x.status!=='done'}).sort(function(a,b){return(b.t||0)-(a.t||0)});PX=all.filter(function(x){return x.up&&x.status==='done'}).sort(function(a,b){return a.date<b.date?1:a.date>b.date?-1:(b.t||0)-(a.t||0)});S.matches=all.filter(function(x){return!x.up}).sort(function(a,b){return a.date<b.date?1:a.date>b.date?-1:(b.t||0)-(a.t||0)});MLOAD=true;snapR()});
-  db.collection('votes').onSnapshot(function(q){VT=q.docs.map(function(d){var x=d.data();return{id:d.id,m:x.m,r:x.r,v:x.v,k:x.k,g:x.g,t:x.t||0}});snapR()});
+  db.collection('votes').onSnapshot(function(q){VT=q.docs.map(function(d){var x=d.data();return{id:d.id,m:x.m,r:x.r,v:x.v,k:x.k,g:x.g,t:x.t||0}});VLOAD=true;snapR()});
   poll();setInterval(poll,8000);loadPh();setInterval(loadPh,60000);
 }
 function today(){var d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
@@ -996,7 +996,7 @@ function gate(){var g=document.getElementById('gate');if(!g)return;var nd=gateNe
   else h+=(S.players.length>12?'<input id="gq" class="gq" placeholder="Adı axtar…" value="'+esc(GQ)+'" oninput="GQ=this.value;gate()">':'')+'<div class="glist">'+(L.length?L.map(function(n){return'<button class="gname'+(GP===n?' on':'')+'" onclick="GP=decodeURIComponent(\''+encodeURIComponent(n).replace(/'/g,'%27')+'\');gate()">'+av(n,30)+'<span>'+esc(n)+'</span></button>'}).join(''):'<p class="empty">Tapılmadı</p>')+'</div><button class="btn full" '+(GP?'':'disabled ')+'onclick="gateOk()">'+(GP?esc(GP)+' kimi davam et':'Adınızı seçin')+'</button>';
   h+='<button class="ghost gadm" onclick="tab(1)">Admin girişi</button></div>';
   if(h!==GKEY){var f=document.activeElement&&document.activeElement.id==='gq',sc=(g.querySelector('.glist')||{}).scrollTop||0;GKEY=h;g.innerHTML=h;var gl=g.querySelector('.glist');if(gl)gl.scrollTop=sc;if(f){var q=document.getElementById('gq');q.focus();q.setSelectionRange(q.value.length,q.value.length)}}}
-function gateOk(){if(!GP)return;var n=GP;GP='';GQ='';setMe(n)}
+function gateOk(){if(!GP)return;var n=GP;GP='';GQ='';setMe(n);if(T===2&&needRsvp())tab(4)}
 var TORD={1:0,2:1,4:2,3:3};
 function renderVote(){var g=curNext(),dot=document.getElementById('tdot');if(dot)dot.hidden=!(g&&!nClosed(g)&&ME&&!rsvp(g).me);
   if(T!==4)return;var v=document.getElementById('v4');
@@ -1108,7 +1108,7 @@ function statView(rows,st,bc,gl,as){
     return'<button class="srow" onclick="openP('+PRL.indexOf(n)+')"><span class="rk">'+(k+1)+'</span>'+av(n,36)+'<span class="sm"><span class="sn">'+esc(n)+'</span><span class="ss">'+r.p+' oyun · '+r.w+'Q '+r.d+'B '+r.l+'M</span>'+(function(){var x=[];if(r.g)x.push('GK '+r.g);if(gl[n]||as[n])x.push('⚽ '+(gl[n]||0),BOOT+' '+(as[n]||0));if(bc[n])x.push('<span class="star">★</span> '+bc[n]);return x.length?'<span class="ss">'+x.join(' · ')+'</span>':''})()+'<span class="bar"><b style="width:'+pc+'%"></b></span></span><span class="sv"><b data-n="'+mv(n)+'">'+mv(n)+'</b><small>'+ml+'</small><em><span data-n="'+pc+'">'+pc+'</span>%</em></span></button>'}).join('')+'</div>';
   h+='<div class="hlp"><button class="ghost" onclick="HELP=!HELP;rr()" aria-expanded="'+HELP+'"><span class="q">?</span> İşarələr nə deməkdir</button>'+(HELP?'<p class="empty">Q – qələbə, B – bərabərlik, M – məğlubiyyət. GK – qapıçı olduğu oyun sayı. ⚽ – qol, '+BOOT+' – ötürmə. <span class="star">★</span> – oyunun ən yaxşısı seçilmə sayı. Yaşıl zolaq və faiz – qələbə faizi. Ətraflı görmək üçün oyunçuya toxunun.</p>':'')+'</div>';
   return h}
-function render(){gate();hdr();renderVote();document.getElementById('fab').textContent=T===1?'×':(adm()?'+':'⚙');
+function render(){autoTab();gate();hdr();renderVote();document.getElementById('fab').textContent=T===1?'×':(adm()?'+':'⚙');
   if(T===1&&!adm()){if(!document.getElementById('le'))document.getElementById('v1').innerHTML='<div class="card"><h2>Admin girişi</h2><p class="empty">Oyun əlavə etmək və düzəltmək üçün daxil olun.</p><input id="le" type="text" placeholder="İstifadəçi adı" autocapitalize="off" autocomplete="username" style="width:100%"><input id="lp" type="password" placeholder="Parol" style="width:100%;margin-top:8px" onkeydown="if(event.key===\'Enter\')login()"><button class="btn full" onclick="login()">Daxil ol</button></div>'}
   else if(T===1){
     var h=ngForm()+'<div class="card"><h2>Oyunçular</h2><div class="row"><input id="np" placeholder="Oyunçunun adı" onkeydown="if(event.key===\'Enter\')addPlayer()"><button class="btn" onclick="addPlayer()">Əlavə et</button></div>';
@@ -1193,6 +1193,9 @@ function gName(n,adm){return isG(n)?esc(n.slice(0,-GSUF.length))+' <small class=
 /* admin: açıq MVP səsverməsinin canlı nəticəsi */
 function mvpLive(m){if(!adm()||!vopen(m))return'';var w=winners(m),k=Object.keys(w.c).sort(function(a,b){return w.c[b]-w.c[a]||a.localeCompare(b)}),tot=k.reduce(function(s,n){return s+w.c[n]},0);
   return'<div class="mvl"><div class="mvl-h"><span>Canlı nəticə</span><small>yalnız admin görür</small></div>'+(tot?k.map(function(n){var pc=Math.round(w.c[n]/tot*100);return'<div class="mvl-r'+(w.c[n]===w.mx?' top':'')+'"><span class="mvl-n">'+esc(n)+'</span><span class="mvl-b"><b style="width:'+pc+'%"></b></span><span class="mvl-c">'+w.c[n]+'</span></div>'}).join(''):'<p class="empty" style="margin:4px 0">Hələ səs yoxdur.</p>')+'</div>'}
+var VLOAD=false,AT_DONE=!!location.hash;
+function needRsvp(){var g=curNext();return!!(g&&!nClosed(g)&&ME&&S.players.indexOf(ME)>-1&&!rsvp(g).me)}
+function autoTab(){if(AT_DONE||!MLOAD||!VLOAD||!PLOAD)return;AT_DONE=true;if(T===2&&needRsvp())tab(4)}
 var GMS=['yan','fev','mar','apr','may','iyn','iyl','avq','sen','okt','noy','dek'];
 function nm21(){var g=curNext();if(!g)return'';var r=rsvp(g),cl=nClosed(g),p=g.date.split('-');
   return'<button class="card nm21" onclick="tab(4)"><span class="nm21-d"><b>'+(+p[2])+'</b><small>'+GMS[+p[1]-1]+'</small></span><span class="nm21-m"><small>'+(cl?'Səsvermə bitib':'Növbəti oyun')+'</small><b>'+wday(g.date)+(g.h?' · '+esc(g.h):'')+'</b><span>'+esc(g.st||'Stadion')+'</span></span><span class="nm21-c"><b>'+r.main.length+'<em>/'+r.cap+'</em></b><small>gəlir</small></span></button>'}
