@@ -1193,9 +1193,10 @@ function gName(n,adm){return isG(n)?esc(n.slice(0,-GSUF.length))+' <small class=
 /* admin: açıq MVP səsverməsinin canlı nəticəsi */
 function mvpLive(m){if(!adm()||!vopen(m))return'';var w=winners(m),k=Object.keys(w.c).sort(function(a,b){return w.c[b]-w.c[a]||a.localeCompare(b)}),tot=k.reduce(function(s,n){return s+w.c[n]},0);
   return'<div class="mvl"><div class="mvl-h"><span>Canlı nəticə</span><small>yalnız admin görür</small></div>'+(tot?k.map(function(n){var pc=Math.round(w.c[n]/tot*100);return'<div class="mvl-r'+(w.c[n]===w.mx?' top':'')+'"><span class="mvl-n">'+esc(n)+'</span><span class="mvl-b"><b style="width:'+pc+'%"></b></span><span class="mvl-c">'+w.c[n]+'</span></div>'}).join(''):'<p class="empty" style="margin:4px 0">Hələ səs yoxdur.</p>')+'</div>'}
-var VLOAD=false,AT_DONE=!!location.hash;
-function needRsvp(){var g=curNext();return!!(g&&!nClosed(g)&&ME&&S.players.indexOf(ME)>-1&&!rsvp(g).me)}
-function autoTab(){if(AT_DONE||!MLOAD||!VLOAD||!PLOAD)return;AT_DONE=true;if(T===2&&needRsvp())tab(4)}
+var VLOAD=false,AT_DONE=false,HNEXT=location.hash==='#next',HDEEP=/^#mvp-/.test(location.hash);
+function gLive(g){return!!(g&&!nClosed(g)&&(g.date||'')>=today())}
+function needRsvp(){var g=curNext();return!!(gLive(g)&&ME&&S.players.indexOf(ME)>-1&&!rsvp(g).me)}
+function autoTab(){if(AT_DONE||!MLOAD||!VLOAD||!PLOAD)return;AT_DONE=true;if(T!==2||HDEEP)return;var g=curNext();if(HNEXT?gLive(g):needRsvp())tab(4)}
 var GMS=['yan','fev','mar','apr','may','iyn','iyl','avq','sen','okt','noy','dek'];
 function nm21(){var g=curNext();if(!g)return'';var r=rsvp(g),cl=nClosed(g),p=g.date.split('-');
   return'<button class="card nm21" onclick="tab(4)"><span class="nm21-d"><b>'+(+p[2])+'</b><small>'+GMS[+p[1]-1]+'</small></span><span class="nm21-m"><small>'+(cl?'Səsvermə bitib':'Növbəti oyun')+'</small><b>'+wday(g.date)+(g.h?' · '+esc(g.h):'')+'</b><span>'+esc(g.st||'Stadion')+'</span></span><span class="nm21-c"><b>'+r.main.length+'<em>/'+r.cap+'</em></b><small>gəlir</small></span></button>'}
@@ -1236,7 +1237,7 @@ function mvpShare(id){var m=S.matches.filter(function(x){return x.id===id})[0];i
   else{var w=winners(m),rk=Object.keys(w.c).sort(function(a,b){return w.c[b]-w.c[a]||a.localeCompare(b)});
     t='🏆 Oyunun ən yaxşısı: '+w.w.join(', ')+' ('+w.mx+' səs)\n'+when+'\n'+sc+'\n\n'+rk.map(function(n,i){return(i+1)+'. '+n+' — '+w.c[n]+' səs'}).join('\n')+'\n\n'+link}
   waOpen(t)}
-tab(location.hash==='#next'?4:2);init();
+if(location.hash&&history.replaceState)history.replaceState(null,'',location.pathname+location.search);tab(2);init();
 </script>
 </body>
 </html>
