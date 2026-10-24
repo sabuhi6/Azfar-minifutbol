@@ -533,6 +533,14 @@ body{font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif!important;-
 .gc-seg button{border:0;background:none;color:var(--mute);font:600 13px Inter,system-ui,sans-serif;padding:8px;border-radius:9px}
 .gc-seg button.on{background:var(--g);color:var(--bg)}
 .gc-a{margin:8px 0 0}
+.gc-x{display:flex;flex-wrap:wrap;justify-content:center;gap:2px 4px;margin:-4px 0 -2px}
+.gc-x .ghost{font-size:12.5px;padding:6px 8px;text-decoration:none}
+.gc-v{border:1px solid var(--line);border-radius:12px;padding:10px 12px;background:var(--bg)}
+.gc-v .rt{margin-top:0;border-top:0;padding-top:0}
+.gc-v .btn.full:first-child{margin-top:0}
+.gc-mvp.on{border-color:var(--g)}
+.gc-mvp.on .chev{transform:rotate(90deg)}
+.gc-vid{display:block;text-align:center;text-decoration:none;margin-top:0!important;background:var(--card)!important;color:var(--ink)!important;border:1px solid var(--line)}
 .tlogo{display:inline-block;vertical-align:middle;width:auto;margin:-2px 6px 0 0}
 .pitch .pt .tlogo{margin-right:6px}
 button.brand{background:none;border:0;padding:0;margin:0;font:inherit;color:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent}
@@ -1105,7 +1113,7 @@ function render(){gate();hdr();renderVote();document.getElementById('fab').textC
   else if(T===1){
     var h=ngForm()+'<div class="card"><h2>Oyunçular</h2><div class="row"><input id="np" placeholder="Oyunçunun adı" onkeydown="if(event.key===\'Enter\')addPlayer()"><button class="btn" onclick="addPlayer()">Əlavə et</button></div>';
     h+=S.players.length?(D.pool?'<p class="empty" style="margin:8px 0 0"><span class="chip in" style="padding:1px 8px;font-size:12px">yaşıl</span> — gələcəyini bildirənlər</p>':'')+'<div class="chips">'+S.players.map(function(n,i){return'<button class="chip '+(D.sel[n]||'')+(D.pool&&D.pool.indexOf(n)>-1&&!D.sel[n]?' in':'')+'" onclick="cyc('+i+')">'+esc(n)+'</button>'}).join('')+gChips()+'</div><div class="cnt"><span>'+tlogo('A',18)+'Səhra Pişikləri <b>'+cnt('A')+'/6</b></span><span>'+tlogo('B',18)+'Vəhşi Tırtıllar <b>'+cnt('B')+'/6</b></span></div><p class="empty">Adın üstünə toxun: Səhra Pişikləri → Vəhşi Tırtıllar → heç biri.</p>':'<p class="empty">Əvvəlcə 12 oyunçunun adını əlavə edin. Bir dəfə yazmaq kifayətdir.</p>';
-    h+='</div><div class="card"><h2>'+(D.editId?'Oyunu düzəlt':'Oyunun hesabı')+'</h2><div class="row"><input type="date" id="dt" value="'+D.date+'" onchange="D.date=this.value">'+tsel('tmx',D.h,'D','h')+'</div><input id="stx" list="stl" placeholder="Stadion" value="'+esc(D.st||'')+'" oninput="D.st=this.value" style="width:100%;margin-top:8px"><datalist id="stl">'+stOpts()+'</datalist><input id="vdx" placeholder="Telegram video linki (istəyə bağlı)" value="'+esc(D.vid||'')+'" oninput="D.vid=this.value" style="width:100%;margin-top:8px">'+lineEd('A')+lineEd('B')+'<div class="score"><input type="number" inputmode="numeric" min="0" id="sa" value="'+D.a+'" oninput="D.a=this.value"><span>:</span><input type="number" inputmode="numeric" min="0" id="sb" value="'+D.b+'" oninput="D.b=this.value"></div>'+evForm()+'<button class="btn full" onclick="saveMatch()">'+(D.editId?'Dəyişiklikləri saxla':'Oyunu yadda saxla')+'</button>'+(D.editId?'<button class="ghost" style="width:100%;margin-top:6px" onclick="cancelEdit()">Ləğv et</button>':'')+'</div>';
+    h+='</div><div class="card"><h2>'+(D.editId?'Oyunu düzəlt':'Oyunun hesabı')+'</h2><div class="row"><input type="date" id="dt" value="'+D.date+'" onchange="D.date=this.value">'+tsel('tmx',D.h,'D','h')+'</div><input id="stx" list="stl" placeholder="Stadion" value="'+esc(D.st||'')+'" oninput="D.st=this.value" style="width:100%;margin-top:8px"><datalist id="stl">'+stOpts()+'</datalist><input id="vdx" placeholder="Video linki — Telegram, YouTube, Instagram və s. (istəyə bağlı)" value="'+esc(D.vid||'')+'" oninput="D.vid=this.value" style="width:100%;margin-top:8px">'+lineEd('A')+lineEd('B')+'<div class="score"><input type="number" inputmode="numeric" min="0" id="sa" value="'+D.a+'" oninput="D.a=this.value"><span>:</span><input type="number" inputmode="numeric" min="0" id="sb" value="'+D.b+'" oninput="D.b=this.value"></div>'+evForm()+'<button class="btn full" onclick="saveMatch()">'+(D.editId?'Dəyişiklikləri saxla':'Oyunu yadda saxla')+'</button>'+(D.editId?'<button class="ghost" style="width:100%;margin-top:6px" onclick="cancelEdit()">Ləğv et</button>':'')+'</div>';
     var keep=document.activeElement&&document.activeElement.id,kv=(document.getElementById('np')||{}).value||'';
     document.getElementById('v1').innerHTML=h;
     var e=document.getElementById('np');if(e){e.value=kv;if(keep==='np')e.focus()}var ke=keep&&keep!=='np'&&document.getElementById(keep);if(ke){ke.focus();try{ke.setSelectionRange(ke.value.length,ke.value.length)}catch(x){}}
@@ -1188,8 +1196,9 @@ function mvpLive(m){if(!adm()||!vopen(m))return'';var w=winners(m),k=Object.keys
 var GMS=['yan','fev','mar','apr','may','iyn','iyl','avq','sen','okt','noy','dek'];
 function nm21(){var g=curNext();if(!g)return'';var r=rsvp(g),cl=nClosed(g),p=g.date.split('-');
   return'<button class="card nm21" onclick="tab(4)"><span class="nm21-d"><b>'+(+p[2])+'</b><small>'+GMS[+p[1]-1]+'</small></span><span class="nm21-m"><small>'+(cl?'Səsvermə bitib':'Növbəti oyun')+'</small><b>'+wday(g.date)+(g.h?' · '+esc(g.h):'')+'</b><span>'+esc(g.st||'Stadion')+'</span></span><span class="nm21-c"><b>'+r.main.length+'<em>/'+r.cap+'</em></b><small>gəlir</small></span></button>'}
-var GTAB='d';
-function gcOpen(id){if(OPEN===id){OPEN=null;MV=''}else{OPEN=id;MV=id;VD=null;GTAB='d'}askDel=null;render();var e=document.getElementById('mi'+id);if(e){var r=e.getBoundingClientRect();if(r.top<0||r.top>innerHeight-160)e.scrollIntoView({block:'start',behavior:'smooth'})}}
+var GTAB='l',VOPEN=null;
+function gvOpen(id){VOPEN=VOPEN===id?null:id;VD=null;askDel=null;render()}
+function gcOpen(id){if(OPEN===id){OPEN=null;MV=''}else{OPEN=id;MV=id}askDel=null;render();var e=document.getElementById('mi'+id);if(e){var r=e.getBoundingClientRect();if(r.top<0||r.top>innerHeight-160)e.scrollIntoView({block:'start',behavior:'smooth'})}}
 function gc21(m,dl){var o=OPEN===m.id,e=m.ev||{},G={A:[],B:[]},wa=m.a>m.b,wb=m.b>m.a;
   Object.keys(e).forEach(function(n){var x=e[n]||[0,0];if(x[0]||x[1])G[(m.B||[]).indexOf(n)>-1?'B':'A'].push([n,x[0]||0,x[1]||0])});
   ['A','B'].forEach(function(t){G[t].sort(function(x,y){return y[1]-x[1]||y[2]-x[2]||x[0].localeCompare(y[0])})});
@@ -1198,15 +1207,24 @@ function gc21(m,dl){var o=OPEN===m.id,e=m.ev||{},G={A:[],B:[]},wa=m.a>m.b,wb=m.b
     +'<div class="gc-s"><div class="gc-t">'+tlogo('A',52)+'<b>Səhra Pişikləri</b></div><div class="gc-n"><span class="'+(wb?'l':'')+'">'+m.a+'</span><em>:</em><span class="'+(wa?'l':'')+'">'+m.b+'</span></div><div class="gc-t">'+tlogo('B',52)+'<b>Vəhşi Tırtıllar</b></div></div>';
   if(G.A.length||G.B.length)h+='<div class="gc-g">'+['A','B'].map(function(t){return'<div>'+G[t].map(function(x){return'<span class="gc-r"><span class="en">'+esc(x[0])+'</span>'+(x[1]?'<span class="ei">⚽<b>'+x[1]+'</b></span>':'')+(x[2]?'<span class="ei">'+BOOT+'<b>'+x[2]+'</b></span>':'')+'</span>'}).join('')+'</div>'}).join('')+'</div>';
   if(w&&w.mx>0)h+='<div class="gc-mvp">'+av(w.w[0],30)+'<div><small>Oyunun ən yaxşısı</small><b>'+w.w.map(esc).join(', ')+'</b></div><span class="star">★</span></div>';
-  else if(vopen(m)&&!o)h+='<button class="gc-mvp" onclick="gcOpen(\''+m.id+'\')"><span class="star">★</span><div><small>Səsvermə açıqdır</small><b>Ən yaxşı oyunçunu seçin</b></div><span class="chev">›</span></button>';
+  else if(vopen(m))h+='<button class="gc-mvp'+(VOPEN===m.id?' on':'')+'" onclick="gvOpen(\''+m.id+'\')"><span class="star">★</span><div><small>Səsvermə açıqdır</small><b>Ən yaxşı oyunçunu seçin</b></div><span class="chev">›</span></button>';
+  if(VOPEN===m.id)h+='<div class="gc-v">'+voteBlock(m)+(typeof mvpLive==='function'?mvpLive(m):'')+(vopen(m)?mvpWa(m):'')+'</div>';
+  var ax=[];ax.push('<button class="ghost" onclick="shareImg(\''+m.id+'\')">Şəkil yarat</button>');
+  if(w&&w.mx>0)ax.push('<button class="ghost" onclick="mvpShare(\''+m.id+'\')">Nəticəni paylaş</button>');
+  if(adm()){if(!vopen(m))ax.push('<button class="ghost" onclick="gvOpen(\''+m.id+'\')">Səsvermə</button>');ax.push('<button class="ghost" onclick="editMatch(\''+m.id+'\')">Düzəlt</button>','<button class="ghost" onclick="delMatch(\''+m.id+'\')">'+(askDel===m.id?'Əminsiniz?':'Sil')+'</button>')}
+  h+='<div class="gc-x">'+ax.join('')+'</div>';
+  var vu=vidUrl(m.vid);if(vu)h+='<a class="btn full gc-vid" href="'+esc(vu)+'" target="_blank" rel="noopener">▶ Videonu izlə</a>';
   if(o){var mb=mapBlock(m).replace(/^<button[^>]*>[^<]*<\/button>/,'');
     if(!mb)mb='<div class="sides"><div><small>Səhra Pişikləri</small>'+(m.A.slice().sort(function(x,y){return(y===m.gkA)-(x===m.gkA)}).map(function(n){return esc(n)+(n===m.gkA?' <small class="pos">GK</small>':'')}).join('<br>')||'—')+'</div><div><small>Vəhşi Tırtıllar</small>'+(m.B.slice().sort(function(x,y){return(y===m.gkB)-(x===m.gkB)}).map(function(n){return esc(n)+(n===m.gkB?' <small class="pos">GK</small>':'')}).join('<br>')||'—')+'</div></div>';
-    var tl=typeof glTL==='function'?glTL(m):'',dt=tl+vidBtn(m)+shBtn(m)+voteBlock(m)+(typeof mvpLive==='function'?mvpLive(m):'')+mvpWa(m)+(adm()?'<div class="gc-a"><button class="ghost" onclick="editMatch(\''+m.id+'\')">Düzəlt</button><button class="ghost" onclick="delMatch(\''+m.id+'\')">'+(askDel===m.id?'Əminsiniz? Yenə toxunun':'Sil')+'</button></div>':'');
-    h+='<div class="gc-d"><div class="gc-seg" role="tablist"><button role="tab" aria-selected="'+(GTAB==='d')+'" class="'+(GTAB==='d'?'on':'')+'" onclick="GTAB=\'d\';render()">Təfsilatlar</button><button role="tab" aria-selected="'+(GTAB==='l')+'" class="'+(GTAB==='l'?'on':'')+'" onclick="GTAB=\'l\';render()">Düzülüş</button></div>'+(GTAB==='l'?mb:dt)+'</div>'}
-  return h+'<button class="btn full gc-b" onclick="gcOpen(\''+m.id+'\')">'+(o?'Bağla':'Ətraflı')+'</button></section>'}
+    h+='<div class="gc-d">'+mb+'</div>'}
+  return h+'<button class="btn full gc-b" onclick="gcOpen(\''+m.id+'\')">'+(o?'Bağla':'Düzülüş')+'</button></section>'}
+
+/* video linki: istənilən http(s) link (Telegram, YouTube, Instagram, Drive…) */
+function vidUrl(v){v=(v||'').trim();if(!v)return'';if(!/^https?:\/\//i.test(v)){if(/^[\w-]+(\.[\w-]+)+\//.test(v))v='https://'+v;else return''}return v}
+function vidBtn(m){var u=vidUrl(m.vid);return u?'<a class="btn full" style="display:block;text-align:center;text-decoration:none" href="'+esc(u)+'" target="_blank" rel="noopener">▶ Videonu izlə</a>':''}
 window.addEventListener('unhandledrejection',function(e){e.preventDefault()});
 /* MVP səsverməsini WhatsApp-da paylaş */
-var DEEP=(location.hash.match(/^#mvp-(.+)$/)||[])[1]||null;if(DEEP){try{DEEP=decodeURIComponent(DEEP)}catch(e){}OPEN=DEEP;MV=DEEP;GTAB='d'}
+var DEEP=(location.hash.match(/^#mvp-(.+)$/)||[])[1]||null;if(DEEP){try{DEEP=decodeURIComponent(DEEP)}catch(e){}VOPEN=DEEP}
 function mvpWa(m){if(!DB||!(vopen(m)||(vclosed(m)&&winners(m).mx>0)))return'';return'<button class="btn full wa mvwa" onclick="mvpShare(\''+m.id+'\')">'+(vopen(m)?'Səsverməni WhatsApp-da paylaş':'Nəticəni WhatsApp-da paylaş')+'</button>'}
 function mvpShare(id){var m=S.matches.filter(function(x){return x.id===id})[0];if(!m)return;
   var link=siteUrl()+'#mvp-'+encodeURIComponent(m.id),when='📅 '+wday(m.date)+', '+dm(m.date)+(m.h?' · '+m.h:''),sc='⚽ Səhra Pişikləri '+m.a+' : '+m.b+' Vəhşi Tırtıllar',t;
