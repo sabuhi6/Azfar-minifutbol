@@ -756,8 +756,9 @@ function init(){
   if(CFG.url.indexOf('BURAYA')===0)return;
   var db=DB=mkDb();S={players:[],matches:[]};setTimeout(function(){if(!MLOAD){MSLOW=true;render()}},12000);render();
   db.collection('players').onSnapshot(function(q){var l=q.docs.map(function(d){var x=d.data();return{id:d.id,n:x.name,t:x.t||0}}).sort(function(a,b){return a.t-b.t});S.players=l.map(function(x){return x.n});PID={};POS={};TS={};l.forEach(function(x){PID[x.n]=x.id;POS[x.n]=x.p||'';TS[x.n]=x.t});PLOAD=true;snapR()});
-  db.collection('matches').onSnapshot(function(q){var all=q.docs.map(function(d){var x=d.data();x.id=d.id;return x});NX=all.filter(function(x){return x.up&&x.status!=='done'}).sort(function(a,b){return(b.t||0)-(a.t||0)});PX=all.filter(function(x){return x.up&&x.status==='done'}).sort(function(a,b){return a.date<b.date?1:a.date>b.date?-1:(b.t||0)-(a.t||0)});S.matches=all.filter(function(x){return!x.up}).sort(function(a,b){return a.date<b.date?1:a.date>b.date?-1:(b.t||0)-(a.t||0)});MLOAD=true;snapR()});
+  db.collection('matches').onSnapshot(function(q){var all=q.docs.map(function(d){var x=d.data();x.id=d.id;return x});linkResults(all);NX=all.filter(function(x){return x.up&&x.status!=='done'}).sort(function(a,b){return(b.t||0)-(a.t||0)});PX=all.filter(function(x){return x.up&&x.status==='done'}).sort(function(a,b){return a.date<b.date?1:a.date>b.date?-1:(b.t||0)-(a.t||0)});S.matches=all.filter(function(x){return!x.up}).sort(function(a,b){return a.date<b.date?1:a.date>b.date?-1:(b.t||0)-(a.t||0)});MLOAD=true;snapR()});
   db.collection('votes').onSnapshot(function(q){VT=q.docs.map(function(d){var x=d.data();return{id:d.id,m:x.m,r:x.r,v:x.v,k:x.k,g:x.g,t:x.t||0}});VLOAD=true;snapR()});
+  db.collection('pins').onSnapshot(function(q){var m={};q.docs.forEach(function(d){var x=d.data();if(x&&x.n&&x.h)m[x.n]={s:x.s||'',h:x.h}});PN=m;PNLOAD=true;snapR()});
   poll();setInterval(poll,8000);loadPh();setInterval(loadPh,60000);
 }
 function today(){var d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
@@ -973,7 +974,7 @@ function vidBtn(m){return /^https:\/\/(t|telegram)\.me\//.test(m.vid||'')?'<a cl
 function stOpts(){var u={};S.matches.forEach(function(m){if(m.st)u[m.st]=1});return Object.keys(u).map(function(k){return'<option value="'+esc(k)+'">'}).join('')}
 function gkSel(t){var l=SG().filter(function(n){return D.sel[n]===t}).concat((t==='A'?D.keepA:D.keepB)||[]);var v=t==='A'?D.gkA:D.gkB;return '<select onchange="D.gk'+t+'=this.value"><option value="">—</option>'+l.map(function(n){return'<option'+(n===v?' selected':'')+' value="'+esc(n)+'">'+esc(n)+'</option>'}).join('')+'</select>'}
 function cyc(i){var n=S.players[i],c=D.sel[n];if(EM){if(DB&&PID[n]){var nx=PL[(PL.indexOf(POS[n]||'')+1)%PL.length];DB.collection('players').doc(PID[n]).set({name:n,t:TS[n],p:nx})}return}if(!c)D.sel[n]='A';else if(c==='A')D.sel[n]='B';else delete D.sel[n];render()}
-function rmPlayer(i){var n=S.players[i];delete D.sel[n];if(DB&&PID[n])DB.collection('players').doc(PID[n]).delete();else{S.players.splice(i,1);save();render()}}
+function rmPlayer(i){var n=S.players[i];delete D.sel[n];if(PN[n]&&DB)rnDel('pins','pin__'+n).catch(function(){});if(DB&&PID[n])DB.collection('players').doc(PID[n]).delete();else{S.players.splice(i,1);save();render()}}
 function saveMatch(){
   var A=[],B=[];SG().forEach(function(n){if(D.sel[n]==='A')A.push(n);if(D.sel[n]==='B')B.push(n)});
   if(D.a===''||D.b==='')return alert('Hesabı yazın');
@@ -986,23 +987,78 @@ var OPEN=null,JUST=null,TGB=false;function tg(id){if(TGB)return;var cur=OPEN&&do
 function tg2(id){OPEN=OPEN===id?null:id;JUST=OPEN;askDel=null;render();var e=document.getElementById('mi'+id);if(e&&OPEN){var r=e.getBoundingClientRect();if(r.top<0||r.top>innerHeight-120)e.scrollIntoView({block:'start',behavior:'smooth'})}}
 function monthName(k){var a=['Yanvar','Fevral','Mart','Aprel','May','İyun','İyul','Avqust','Sentyabr','Oktyabr','Noyabr','Dekabr'],p=(k||'').split('-');return p.length===2?a[+p[1]-1]+' '+p[0]:''}
 var PLOAD=false,GP='',GQ='',GKEY='';
-function gateNeed(){if(T===1)return false;if(DB&&!PLOAD)return ME?false:'load';if(!S.players.length)return false;return!(ME&&S.players.indexOf(ME)>-1)}
+var PN={},PNLOAD=false,PSKIP={},GS='',GPIN='',GPIN2='',GERR='',GBUSY=false,GSKIP=false,GFAIL=0,GLOCK=0,PRS='';
+function gateNeed(){if(T===1)return false;if(DB&&!PLOAD)return ME?false:'load';if(!S.players.length)return false;if(!(ME&&S.players.indexOf(ME)>-1))return true;if(PNLOAD&&!PN[ME]&&!PSKIP[ME])return'migrate';return false}
 function gate(){var g=document.getElementById('gate');if(!g)return;var nd=gateNeed();
   if(!nd){if(!g.hidden){g.hidden=true;document.body.classList.remove('gated');GKEY=''}return}
+  if(nd==='migrate'&&GS!=='set'){GP=ME;GS='set';GPIN='';GPIN2='';GERR='';GSKIP=false}
   document.body.classList.add('gated');if(g.hidden){g.hidden=false;g.classList.add('show');setTimeout(function(){g.classList.remove('show')},450)}
   var L=S.players.filter(function(n){return!GQ||n.toLowerCase().indexOf(GQ.toLowerCase())>-1});
   var h='<div class="gbox" role="dialog" aria-modal="true" aria-labelledby="gt"><div class="glogo">⚽</div><h2 id="gt">Xoş gəlmisiniz!</h2><p>Zəhmət olmasa, adınızı seçin. Bu telefonda yadda qalacaq və səs verərkən istifadə olunacaq.</p>';
   if(nd==='load')h+='<div class="glist">'+[1,2,3,4,5,6].map(function(){return'<span class="gname sk-g"><i class="sk" style="width:70%"></i></span>'}).join('')+'</div>';
   else h+=(S.players.length>12?'<input id="gq" class="gq" placeholder="Adı axtar…" value="'+esc(GQ)+'" oninput="GQ=this.value;gate()">':'')+'<div class="glist">'+(L.length?L.map(function(n){return'<button class="gname'+(GP===n?' on':'')+'" onclick="GP=decodeURIComponent(\''+encodeURIComponent(n).replace(/'/g,'%27')+'\');gate()">'+av(n,30)+'<span>'+esc(n)+'</span></button>'}).join(''):'<p class="empty">Tapılmadı</p>')+'</div><button class="btn full" '+(GP?'':'disabled ')+'onclick="gateOk()">'+(GP?esc(GP)+' kimi davam et':'Adınızı seçin')+'</button>';
   h+='<button class="ghost gadm" onclick="tab(1)">Admin girişi</button></div>';
-  if(h!==GKEY){var f=document.activeElement&&document.activeElement.id==='gq',sc=(g.querySelector('.glist')||{}).scrollTop||0;GKEY=h;g.innerHTML=h;var gl=g.querySelector('.glist');if(gl)gl.scrollTop=sc;if(f){var q=document.getElementById('gq');q.focus();q.setSelectionRange(q.value.length,q.value.length)}}}
-function gateOk(){if(!GP)return;var n=GP;GP='';GQ='';setMe(n);if(T===2&&needRsvp())tab(4)}
+  if(GS)h=pinPanel();
+  if(h!==GKEY){var f=document.activeElement&&document.activeElement.id==='gq',sc=(g.querySelector('.glist')||{}).scrollTop||0;GKEY=h;g.innerHTML=h;var gl=g.querySelector('.glist');if(gl)gl.scrollTop=sc;if(GS){var pe=document.getElementById('gp1');if(pe&&!GBUSY)pe.focus()}if(f){var q=document.getElementById('gq');q.focus();q.setSelectionRange(q.value.length,q.value.length)}}}
+function gateOk(){if(!GP)return;var n=GP;if(!PNLOAD)return pinDone(n);GS=PN[n]?'verify':'set';GPIN='';GPIN2='';GERR='';GSKIP=false;gate()}
+/* PIN: 4 rəqəm, duzlu SHA-256 hash kimi 'pins' kolleksiyasında saxlanır */
+function fnvHash(t){var a=0xdeadbeef,b=0x41c6ce57;for(var i=0;i<t.length;i++){var c=t.charCodeAt(i);a=Math.imul(a^c,2654435761);b=Math.imul(b^c,1597334677)}a=Math.imul(a^(a>>>16),2246822507)^Math.imul(b^(b>>>13),3266489909);b=Math.imul(b^(b>>>16),2246822507)^Math.imul(a^(a>>>13),3266489909);return(4294967296*(2097151&b)+(a>>>0)).toString(16)}
+function hashPin(salt,pin){var t='mf:'+salt+':'+pin;if(window.crypto&&crypto.subtle&&window.TextEncoder)return crypto.subtle.digest('SHA-256',new TextEncoder().encode(t)).then(function(b){return Array.prototype.map.call(new Uint8Array(b),function(x){return('0'+x.toString(16)).slice(-2)}).join('')});return Promise.resolve(fnvHash(t))}
+function rndSalt(){var a=new Uint8Array(8);if(window.crypto&&crypto.getRandomValues)crypto.getRandomValues(a);else for(var i=0;i<8;i++)a[i]=Math.floor(Math.random()*256);return Array.prototype.map.call(a,function(x){return('0'+x.toString(16)).slice(-2)}).join('')}
+function pinDone(n){GS='';GP='';GQ='';GPIN='';GPIN2='';GERR='';GSKIP=false;GFAIL=0;setMe(n);if(T===2&&needRsvp())tab(4)}
+function pinSkip(){if(!GP)return;PSKIP[GP]=1;pinDone(GP)}
+function pinBack(){var mig=(GP===ME);GS='';GP='';GPIN='';GPIN2='';GERR='';GSKIP=false;if(mig)setMe('');else gate()}
+function pinPanel(){var n=GP,set=GS==='set',st='text-align:center;letter-spacing:.5em;font-size:22px';
+  return'<div class="gbox" role="dialog" aria-modal="true"><div class="glogo">🔒</div><h2>'+(set?'PIN təyin edin':'PIN daxil edin')+'</h2><p>'+(set?'<b>'+esc(n)+'</b> üçün 4 rəqəmli PIN seçin. Başqası bu adla girmək istəyəndə bu PIN soruşulacaq. Bu telefonda hər dəfə soruşulmayacaq.':'<b>'+esc(n)+'</b> adı ilə girmək üçün onun 4 rəqəmli PIN-i lazımdır.')+'</p>'
+  +'<input id="gp1" class="gq" type="password" inputmode="numeric" maxlength="4" autocomplete="one-time-code" placeholder="PIN" style="'+st+'" value="'+esc(GPIN)+'" oninput="this.value=this.value.replace(/\\D/g,\'\');GPIN=this.value" onkeydown="if(event.key===\'Enter\')pinGo()">'
+  +(set?'<input id="gp2" class="gq" type="password" inputmode="numeric" maxlength="4" autocomplete="one-time-code" placeholder="PIN təkrar" style="'+st+'" value="'+esc(GPIN2)+'" oninput="this.value=this.value.replace(/\\D/g,\'\');GPIN2=this.value" onkeydown="if(event.key===\'Enter\')pinGo()">':'')
+  +(GERR?'<p class="empty" style="color:#c0392b;text-align:center">'+esc(GERR)+'</p>':'')
+  +'<button class="btn full" '+(GBUSY?'disabled ':'')+'onclick="pinGo()">'+(GBUSY?'Gözləyin…':(set?'PIN-i yadda saxla':'Davam et'))+'</button>'
+  +(GSKIP?'<button class="ghost gadm" onclick="pinSkip()">PIN-siz davam et</button>':'')
+  +'<button class="ghost gadm" onclick="pinBack()">‹ Geri</button></div>'}
+function pinGo(){if(GBUSY||!GS)return;var n=GP,set=GS==='set';
+  if(!/^\d{4}$/.test(GPIN)){GERR='4 rəqəm yazın.';return gate()}
+  if(set){
+    if(GPIN!==GPIN2){GERR='İki PIN eyni deyil.';return gate()}
+    GBUSY=true;GERR='';var salt=rndSalt(),pin=GPIN;gate();
+    hashPin(salt,pin).then(function(h){
+      return fetch(CFG.url+'/rest/v1/items',{method:'POST',headers:H(),body:JSON.stringify({col:'pins',id:'pin__'+n,data:{n:n,s:salt,h:h,t:Date.now()}})}).then(function(r){
+        GBUSY=false;
+        if(r.ok){PN[n]={s:salt,h:h};pinDone(n)}
+        else if(r.status===409){poll();GS='verify';GPIN='';GPIN2='';GERR='Bu ad üçün PIN artıq təyin olunub. Onu daxil edin.';gate()}
+        else{GERR='PIN yadda saxlanmadı (xəta '+r.status+').';GSKIP=true;gate()}
+      })}).catch(function(){GBUSY=false;GERR='Bağlantı alınmadı.';GSKIP=true;gate()});
+    return}
+  var p=PN[n];if(!p){GS='set';GPIN='';GERR='';return gate()}
+  if(Date.now()<GLOCK){GERR='Çox səhv cəhd. Bir az gözləyin.';return gate()}
+  GBUSY=true;gate();
+  hashPin(p.s,GPIN).then(function(h){GBUSY=false;
+    if(h===p.h)return pinDone(n);
+    GFAIL++;if(GFAIL>=5){GLOCK=Date.now()+30000;GFAIL=0;GERR='5 səhv cəhd. 30 saniyə gözləyin.'}else GERR='PIN səhvdir.';
+    GPIN='';gate()})}
+/* admin: PIN sıfırla */
+function pinCard(){var l=S.players.filter(function(n){return PN[n]});
+  return'<div class="card"><h2>PIN-i sıfırla</h2><p class="empty">Oyunçu PIN-ni unudubsa, sıfırlayın. Növbəti girişdə yeni PIN təyin edəcək.</p><select id="pnr" aria-label="Oyunçu" onchange="PRS=this.value" style="width:100%"><option value="">'+(l.length?'Oyunçunu seçin':'Hələ PIN təyin edən yoxdur')+'</option>'+l.map(function(n){return'<option value="'+esc(n)+'"'+(n===PRS?' selected':'')+'>'+esc(n)+'</option>'}).join('')+'</select><button class="btn full" onclick="pinReset()">PIN-i sıfırla</button></div>'}
+function pinReset(){var n=PRS;if(!n||!PN[n])return alert('Oyunçunu seçin.');if(!confirm('"'+n+'" üçün PIN sıfırlansın?'))return;
+  rnDel('pins','pin__'+n).then(function(){delete PN[n];PRS='';poll();render();alert('PIN sıfırlandı. '+n+' növbəti girişdə yenisini təyin edəcək.')},function(e){alert('PIN sıfırlanmadı (xəta '+e+').')})}
 var TORD={1:0,2:1,4:2,3:3};
 function renderVote(){var g=curNext(),dot=document.getElementById('tdot');if(dot)dot.hidden=!(g&&!nClosed(g)&&ME&&!rsvp(g).me);
   if(T!==4)return;var v=document.getElementById('v4');
   var h=loading()?skel(1,1):meBar()+(g?nextCard():'<div class="card nx-empty"><div class="glogo">🗳️</div><h2>Hələ səsvermə yoxdur</h2><p class="empty">Növbəti oyun elan olunanda burada "Gəlirəm / Gəlmirəm" səsverməsi açılacaq.</p>'+(adm()&&SES&&DB?'<button class="btn full" onclick="ngNew()">+ Növbəti oyunu elan et</button>':'')+'</div>');
   if(!loading())h+=archive();if(h!==renderVote.k){renderVote.k=h;v.innerHTML=h}}
 var PX=[],POX=null;
+/* səsvermə oyunu ilə eyni tarixli nəticəni avtomatik əlaqələndir */
+var AL={};
+function linkResults(all){var ids={},claimed={},res=all.filter(function(x){return!x.up});
+  res.forEach(function(x){ids[x.id]=1});
+  all.forEach(function(x){if(x.up&&x.mid&&ids[x.mid])claimed[x.mid]=1});
+  all.filter(function(g){return g.up&&g.date&&!(g.mid&&ids[g.mid])}).sort(function(a,b){return(a.t||0)-(b.t||0)}).forEach(function(g){
+    var c=res.filter(function(x){return x.date===g.date&&!claimed[x.id]});
+    var m=c.filter(function(x){return(x.h||'')===(g.h||'')})[0]||c.sort(function(a,b){return(b.t||0)-(a.t||0)})[0];
+    if(!m)return;
+    claimed[m.id]=1;g.status='done';g.mid=m.id;
+    if(SES&&DB&&!AL[g.id]){AL[g.id]=1;var o=Object.assign({},g);delete o.id;try{DB.collection('matches').doc(g.id).set(o)}catch(e){}}
+  })}
 function pxSet(id,ch){var g=NX.concat(PX).filter(function(x){return x.id===id})[0];if(!g||!DB)return;var o=Object.assign({},g);delete o.id;Object.assign(o,ch);return DB.collection('matches').doc(id).set(o)}
 function pxRestore(id){if(askDel!=='rs'+id){askDel='rs'+id;return render()}askDel=null;NX.forEach(function(g){pxSet(g.id,{status:'done'})});pxSet(id,{status:'closed',t:Date.now()});POX=null}
 function archive(){if(!PX.length)return'';var A=adm()&&!!SES;
@@ -1022,18 +1078,32 @@ function wday(d){var p=(d||'').split('-');if(p.length<3)return'';return WD[new D
 function curNext(){return NX[0]||null}
 function nClosed(g){return g.status==='closed'||(!!g.vend&&Date.now()>=g.vend)}
 function rsvp(g){var last={};VT.filter(function(x){return x.k==='rsvp'&&x.g===g.id}).forEach(function(x){if(!last[x.r]||x.t>=last[x.r].t)last[x.r]=x});
-  var ins=[],outs=[];Object.keys(last).forEach(function(n){(last[n].v==='in'?ins:outs).push(last[n])});
+  var ins=[],outs=[];Object.keys(last).forEach(function(n){if(last[n].v==='in')ins.push(last[n]);else if(last[n].v==='out')outs.push(last[n])});
   ins.sort(function(a,b){return a.t-b.t});var cap=+g.cap||12;
-  var inN=ins.map(function(x){return x.r}),res=S.players.filter(function(n){return!last[n]});
-  return{main:inN.slice(0,cap),bench:inN.slice(cap),out:outs.filter(function(x){return!isG(x.r)}).map(function(x){return x.r}),none:res,me:ME&&last[ME]?last[ME].v:'',cap:cap}}
+  var inN=ins.map(function(x){return x.r}),res=S.players.filter(function(n){return!last[n]||last[n].v==='clear'});
+  return{main:inN.slice(0,cap),bench:inN.slice(cap),out:outs.filter(function(x){return!isG(x.r)}).map(function(x){return x.r}),none:res,me:ME&&last[ME]&&last[ME].v!=='clear'?last[ME].v:'',cap:cap}}
 function siteUrl(){return location.href.split('#')[0]}
 function gLine(g){return wday(g.date)+', '+dm(g.date)+(g.h?' · '+g.h:'')}
 function waOpen(t){window.open('https://wa.me/?text='+encodeURIComponent(t),'_blank')}
 function waInvite(){var g=curNext();if(!g)return;waOpen('⚽ Növbəti oyun\n📅 '+gLine(g)+(g.st?'\n📍 '+g.st:'')+'\n\nGəlirsən? Burada səs ver 👉 '+siteUrl()+'#next'+(g.vend?'\n⏳ Səsvermə bitir: '+hhmm(g.vend):''))}
 function waLineup(){var g=curNext();if(!g)return;var r=rsvp(g);waOpen('⚽ Heyət — '+gLine(g)+(g.st?', '+g.st:'')+'\n\n'+(r.main.length?r.main.map(function(n,i){return(i+1)+'. '+n}).join('\n'):'Hələ heç kim yoxdur')+(r.bench.length?'\n\n🪑 Ehtiyat: '+r.bench.join(', '):'')+(r.main.length<r.cap?'\n\n❗ '+(r.cap-r.main.length)+' nəfər çatmır':'')+'\n\n'+siteUrl()+'#next')}
-function sendRsvp(v){var g=curNext();if(!g||!ME||RB||nClosed(g))return;RB=true;var t=Date.now(),id='rsvp__'+g.id+'__'+ME+'__'+t,rec={k:'rsvp',g:g.id,r:ME,v:v,t:t};
-  VT.push({id:id,k:'rsvp',g:g.id,r:ME,v:v,t:t});rr();
-  fetch(CFG.url+'/rest/v1/items',{method:'POST',headers:H(),body:JSON.stringify({col:'votes',id:id,data:rec})}).then(function(r){RB=false;if(!r.ok&&r.status!==409){VT=VT.filter(function(x){return x.id!==id});rr();alert('Göndərmək alınmadı (xəta '+r.status+'). Yenidən cəhd edin.')}else poll()}).catch(function(){RB=false;VT=VT.filter(function(x){return x.id!==id});rr();alert('Bağlantı alınmadı. İnterneti yoxlayın.')})}
+/* RSVP: hər dəyişiklik yeni qeyd kimi yazılır, ən son qeyd qüvvədədir */
+function rsvpSend(n,v){var g=curNext();if(!g||RB)return;RB=true;var gid=g.id,att=0,last=0;
+  VT.forEach(function(x){if(x.k==='rsvp'&&x.g===gid&&x.r===n&&x.t>last)last=x.t});
+  function fail(id,msg){RB=false;VT=VT.filter(function(x){return x.id!==id});rr();alert(msg)}
+  function go(){
+    var t=Math.max(Date.now(),last+1)+att,id='rsvp__'+gid+'__'+n+'__'+t,rec={k:'rsvp',g:gid,r:n,v:v,t:t};
+    VT.push({id:id,k:'rsvp',g:gid,r:n,v:v,t:t});rr();
+    var ac=window.AbortController?new AbortController():null,tm=setTimeout(function(){if(ac)ac.abort()},15000);
+    fetch(CFG.url+'/rest/v1/items',{method:'POST',headers:H(),signal:ac?ac.signal:undefined,body:JSON.stringify({col:'votes',id:id,data:rec})}).then(function(r){
+      clearTimeout(tm);
+      if(r.ok){RB=false;poll();return}
+      if(r.status===409&&att<3){VT=VT.filter(function(x){return x.id!==id});att++;return go()}
+      fail(id,'Göndərmək alınmadı (xəta '+r.status+'). '+(r.status===401||r.status===403?'Cavabı dəyişmək icazəsi verilməyib.':'Yenidən cəhd edin.'))
+    }).catch(function(){clearTimeout(tm);fail(id,'Bağlantı alınmadı. İnterneti yoxlayın.')})
+  }
+  go()}
+function sendRsvp(v){var g=curNext();if(!g||!ME||nClosed(g))return;rsvpSend(ME,rsvp(g).me===v?'clear':v)}
 function nextCard(){var g=curNext(),A=adm()&&!!SES;
   if(!g)return A&&DB?'<button class="ghost nx-new" onclick="ngNew()">+ Növbəti oyunu elan et</button>':'';
   var r=rsvp(g),cl=nClosed(g),pc=Math.min(100,Math.round(r.main.length/r.cap*100));
@@ -1117,7 +1187,7 @@ function render(){autoTab();gate();hdr();renderVote();document.getElementById('f
     var keep=document.activeElement&&document.activeElement.id,kv=(document.getElementById('np')||{}).value||'';
     document.getElementById('v1').innerHTML=h;
     var e=document.getElementById('np');if(e){e.value=kv;if(keep==='np')e.focus()}var ke=keep&&keep!=='np'&&document.getElementById(keep);if(ke){ke.focus();try{ke.setSelectionRange(ke.value.length,ke.value.length)}catch(x){}}
-    if(S.players.length){document.getElementById('v1').insertAdjacentHTML('beforeend',rnCard()+'<div style="text-align:center"><button class="ghost" onclick="var i=prompt(\'Silinəcək oyunçunun adı:\');if(i){var k=S.players.indexOf(i.trim());if(k>-1)rmPlayer(k)}">Oyunçunu siyahıdan sil</button></div>')}
+    if(S.players.length){document.getElementById('v1').insertAdjacentHTML('beforeend',rnCard()+pinCard()+'<div style="text-align:center"><button class="ghost" onclick="var i=prompt(\'Silinəcək oyunçunun adı:\');if(i){var k=S.players.indexOf(i.trim());if(k>-1)rmPlayer(k)}">Oyunçunu siyahıdan sil</button></div>')}
   }
   if(T===1&&SES)document.getElementById('v1').insertAdjacentHTML('beforeend','<div style="text-align:center"><button class="ghost" onclick="logout()">Çıxış</button></div>');
   if(T===2){
@@ -1162,6 +1232,7 @@ function renamePlayer(){
   NX.concat(PX,S.matches).forEach(function(x){var d=rnMatch(x,o,n);if(d){var orig=Object.assign({},x);delete orig.id;mj.push({id:x.id,d:d,orig:orig})}});
   VT.forEach(function(v){if(v.r!==o&&v.v!==o)return;var d=v.k==='rsvp'?{k:'rsvp',g:v.g,r:v.r===o?n:v.r,v:v.v,t:v.t}:{m:v.m,r:v.r===o?n:v.r,v:v.v===o?n:v.v,t:v.t};side.push(function(){return rnUpsert('votes',v.id,d)})});
   if(PH[o]){var img=PH[o];side.push(function(){return rnUpsert('photos',n,{img:img}).then(function(){return rnDel('photos',o)})})}
+  if(PN[o]){var pr=PN[o];side.push(function(){return rnUpsert('pins','pin__'+n,{n:n,s:pr.s,h:pr.h,t:Date.now()}).then(function(){return rnDel('pins','pin__'+o)})})}
   function seq(l,f){return l.reduce(function(p,x){return p.then(function(){return f(x)})},Promise.resolve())}
   // 1) oyunlar (vacib): biri alınmasa, dəyişənləri geri qaytar
   seq(mj,function(x){return rnUpsert('matches',x.id,x.d).then(function(){done.push(x)})})
@@ -1182,9 +1253,7 @@ function gPool(){return(D.pool||[]).filter(function(n){return isG(n)&&!D.sel[n]}
 function cycG(n){var c=D.sel[n];if(!c)D.sel[n]='A';else if(c==='A')D.sel[n]='B';else delete D.sel[n];render()}
 function gChips(){var l=SG().filter(isG).concat(gPool());if(!l.length)return'';return l.map(function(n){return'<button class="chip '+(D.sel[n]||'')+(D.pool&&D.pool.indexOf(n)>-1&&!D.sel[n]?' in':'')+'" onclick="cycG(decodeURIComponent(\''+encodeURIComponent(n).replace(/'/g,'%27')+'\'))">'+esc(n.slice(0,-GSUF.length))+' <small class="gtag">qonaq</small></button>'}).join('')}
 function gqRow(){return'<div class="gq-r"><input id="gqn" placeholder="Qonağın adı" autocomplete="off" onkeydown="if(event.key===\'Enter\')addGuest()"><button class="btn" onclick="addGuest()">+ Qonaq</button></div><p class="empty gq-h">Qonaq yalnız bu oyunun siyahısına düşür, oyunçular siyahısına və statistikaya düşmür.</p>'}
-function gRsvp(n,v){var g=curNext();if(!g||RB)return;RB=true;var t=Date.now(),id='rsvp__'+g.id+'__'+n+'__'+t,rec={k:'rsvp',g:g.id,r:n,v:v,t:t};
-  VT.push({id:id,k:'rsvp',g:g.id,r:n,v:v,t:t});rr();
-  fetch(CFG.url+'/rest/v1/items',{method:'POST',headers:H(),body:JSON.stringify({col:'votes',id:id,data:rec})}).then(function(r){RB=false;if(!r.ok&&r.status!==409){VT=VT.filter(function(x){return x.id!==id});rr();alert('Göndərmək alınmadı (xəta '+r.status+'). Yenidən cəhd edin.')}else poll()}).catch(function(){RB=false;VT=VT.filter(function(x){return x.id!==id});rr();alert('Bağlantı alınmadı. İnterneti yoxlayın.')})}
+function gRsvp(n,v){rsvpSend(n,v)}
 function addGuest(){var e=document.getElementById('gqn'),b=((e&&e.value)||'').trim().replace(/\s+/g,' ').replace(/\s*\(qonaq\)$/i,'');if(!b)return alert('Qonağın adını yazın.');
   var n=b+GSUF,g=curNext();if(!g)return;var r=rsvp(g);if(r.main.concat(r.bench).some(function(x){return x.toLowerCase()===n.toLowerCase()}))return alert('"'+b+'" adlı qonaq artıq siyahıdadır.');
   if(e)e.value='';gRsvp(n,'in')}
