@@ -770,14 +770,17 @@ var ENTER=true,ENT=null,ET0=0,V2K='';function RM(){return window.matchMedia&&mat
 function tab(n){var pv=T;if(n===3&&T!==3)CK='';T=n;if(pv!==n&&!RM()){var sc=document.getElementById('v'+n);sc.classList.remove('sl-l','sl-r');void sc.offsetWidth;sc.classList.add(TORD[n]>TORD[pv]?'sl-r':'sl-l');clearTimeout(tab.t);tab.t=setTimeout(function(){sc.classList.remove('sl-l','sl-r')},400)}setTimeout(moveInd,0);if(n===2&&document.getElementById('v2').hidden)ENTER=true;if(n!==3)PP='';for(var i=1;i<=4;i++){document.getElementById('v'+i).hidden=i!==n;document.getElementById('t'+i).className=i===n?'on':''}render()}
 function cnt(t){return Object.keys(D.sel).filter(function(k){return D.sel[k]===t}).length}
 function addPlayer(){var i=document.getElementById('np'),n=i.value.trim();if(!n||S.players.indexOf(n)>-1)return;if(DB){DB.collection('players').doc('p'+Date.now()).set({name:n,t:Date.now()})}else{S.players.push(n);save();render()}i.value='';document.getElementById('np').focus()}
-var VT=[],ME='',VD=null;try{ME=localStorage.getItem('mfme')||''}catch(e){}
+/* yaddaş: localStorage + cookie (biri silinsə digəri qalsın) */
+function stGet(k){var v='';try{v=localStorage.getItem(k)||''}catch(e){}if(!v){try{var m=document.cookie.match(new RegExp('(?:^|; )'+k+'=([^;]*)'));if(m)v=decodeURIComponent(m[1])}catch(e){}}return v}
+function stSet(k,v){try{localStorage.setItem(k,v)}catch(e){}try{document.cookie=k+'='+encodeURIComponent(v)+'; max-age=31536000; path=/; SameSite=Lax'+(location.protocol==='https:'?'; Secure':'')}catch(e){}}
+var VT=[],ME=stGet('mfme'),VD=null;
 var VH=24;
 function vopen(m){return m.vote==='open'&&(!m.vend||Date.now()<m.vend)}
 function vclosed(m){return m.vote==='closed'||(m.vote==='open'&&!!m.vend&&Date.now()>=m.vend)}
 function hhmm(ts){var d=new Date(ts),p=function(n){return String(n).padStart(2,'0')};return d.getDate()+' '+MNL[d.getMonth()]+', '+p(d.getHours())+':'+p(d.getMinutes())}
 function winners(m){var c={},mx=0;VT.filter(function(x){return x.m===m.id}).forEach(function(x){c[x.v]=(c[x.v]||0)+1});Object.keys(c).forEach(function(n){if(c[n]>mx)mx=c[n]});return{c:c,mx:mx,w:Object.keys(c).filter(function(n){return c[n]===mx})}}
 function rr(){if(document.activeElement&&document.activeElement.blur)document.activeElement.blur();render()}
-function setMe(v){ME=v;try{localStorage.setItem('mfme',v)}catch(e){}VD=null;rr()}
+function setMe(v){ME=v;stSet('mfme',v);VD=null;rr()}
 function setVote(id,st){var m=S.matches.filter(function(x){return x.id===id})[0];if(!m||!DB)return;var d=Object.assign({},m);delete d.id;d.vote=st;if(st==='open'&&VH>0)d.vend=Date.now()+VH*3600000;else delete d.vend;DB.collection('matches').doc(id).set(d)}
 function openVote(id){var m=S.matches.filter(function(x){return x.id===id})[0];if(!m)return;VD={mid:id,list:m.A.concat(m.B).filter(function(n){return n!==ME}),pick:-1};rr()}
 function pickV(i){VD.pick=i;VD.ok=false;VD.msg='';rr()}
@@ -988,7 +991,7 @@ function tg2(id){OPEN=OPEN===id?null:id;JUST=OPEN;askDel=null;render();var e=doc
 function monthName(k){var a=['Yanvar','Fevral','Mart','Aprel','May','İyun','İyul','Avqust','Sentyabr','Oktyabr','Noyabr','Dekabr'],p=(k||'').split('-');return p.length===2?a[+p[1]-1]+' '+p[0]:''}
 var PLOAD=false,GP='',GQ='',GKEY='';
 var PN={},PNLOAD=false,PSKIP={},GS='',GPIN='',GPIN2='',GERR='',GBUSY=false,GSKIP=false,GFAIL=0,GLOCK=0,PRS='';
-function gateNeed(){if(T===1)return false;if(DB&&!PLOAD)return ME?false:'load';if(!S.players.length)return false;if(!(ME&&S.players.indexOf(ME)>-1))return true;if(PNLOAD&&!PN[ME]&&!PSKIP[ME])return'migrate';return false}
+function gateNeed(){if(T===1)return false;if(DB&&!PLOAD)return ME?false:'load';if(!S.players.length)return false;if(!(ME&&S.players.indexOf(ME)>-1))return true;if(PNLOAD&&!PN[ME]&&!pinTrusted(ME))return'migrate';return false}
 function gate(){var g=document.getElementById('gate');if(!g)return;var nd=gateNeed();
   if(!nd){if(!g.hidden){g.hidden=true;document.body.classList.remove('gated');GKEY=''}return}
   if(nd==='migrate'&&GS!=='set'){GP=ME;GS='set';GPIN='';GPIN2='';GERR='';GSKIP=false}
@@ -1005,8 +1008,8 @@ function gateOk(){if(!GP)return;var n=GP;if(!PNLOAD)return pinDone(n);GS=PN[n]?'
 function fnvHash(t){var a=0xdeadbeef,b=0x41c6ce57;for(var i=0;i<t.length;i++){var c=t.charCodeAt(i);a=Math.imul(a^c,2654435761);b=Math.imul(b^c,1597334677)}a=Math.imul(a^(a>>>16),2246822507)^Math.imul(b^(b>>>13),3266489909);b=Math.imul(b^(b>>>16),2246822507)^Math.imul(a^(a>>>13),3266489909);return(4294967296*(2097151&b)+(a>>>0)).toString(16)}
 function hashPin(salt,pin){var t='mf:'+salt+':'+pin;if(window.crypto&&crypto.subtle&&window.TextEncoder)return crypto.subtle.digest('SHA-256',new TextEncoder().encode(t)).then(function(b){return Array.prototype.map.call(new Uint8Array(b),function(x){return('0'+x.toString(16)).slice(-2)}).join('')});return Promise.resolve(fnvHash(t))}
 function rndSalt(){var a=new Uint8Array(8);if(window.crypto&&crypto.getRandomValues)crypto.getRandomValues(a);else for(var i=0;i<8;i++)a[i]=Math.floor(Math.random()*256);return Array.prototype.map.call(a,function(x){return('0'+x.toString(16)).slice(-2)}).join('')}
-function pinDone(n){GS='';GP='';GQ='';GPIN='';GPIN2='';GERR='';GSKIP=false;GFAIL=0;setMe(n);if(T===2&&needRsvp())tab(4)}
-function pinSkip(){if(!GP)return;PSKIP[GP]=1;pinDone(GP)}
+function pinTrusted(n){return stGet('mfpv')===n}
+function pinDone(n){stSet('mfpv',n);GS='';GP='';GQ='';GPIN='';GPIN2='';GERR='';GSKIP=false;GFAIL=0;setMe(n);if(T===2&&needRsvp())tab(4)}
 function pinBack(){var mig=(GP===ME);GS='';GP='';GPIN='';GPIN2='';GERR='';GSKIP=false;if(mig)setMe('');else gate()}
 function pinPanel(){var n=GP,set=GS==='set',st='text-align:center;letter-spacing:.5em;font-size:22px';
   return'<div class="gbox" role="dialog" aria-modal="true"><div class="glogo">🔒</div><h2>'+(set?'PIN təyin edin':'PIN daxil edin')+'</h2><p>'+(set?'<b>'+esc(n)+'</b> üçün 4 rəqəmli PIN seçin. Başqası bu adla girmək istəyəndə bu PIN soruşulacaq. Bu telefonda hər dəfə soruşulmayacaq.':'<b>'+esc(n)+'</b> adı ilə girmək üçün onun 4 rəqəmli PIN-i lazımdır.')+'</p>'
@@ -1014,7 +1017,6 @@ function pinPanel(){var n=GP,set=GS==='set',st='text-align:center;letter-spacing
   +(set?'<input id="gp2" class="gq" type="password" inputmode="numeric" maxlength="4" autocomplete="one-time-code" placeholder="PIN təkrar" style="'+st+'" value="'+esc(GPIN2)+'" oninput="this.value=this.value.replace(/\\D/g,\'\');GPIN2=this.value" onkeydown="if(event.key===\'Enter\')pinGo()">':'')
   +(GERR?'<p class="empty" style="color:#c0392b;text-align:center">'+esc(GERR)+'</p>':'')
   +'<button class="btn full" '+(GBUSY?'disabled ':'')+'onclick="pinGo()">'+(GBUSY?'Gözləyin…':(set?'PIN-i yadda saxla':'Davam et'))+'</button>'
-  +(GSKIP?'<button class="ghost gadm" onclick="pinSkip()">PIN-siz davam et</button>':'')
   +'<button class="ghost gadm" onclick="pinBack()">‹ Geri</button></div>'}
 function pinGo(){if(GBUSY||!GS)return;var n=GP,set=GS==='set';
   if(!/^\d{4}$/.test(GPIN)){GERR='4 rəqəm yazın.';return gate()}
@@ -1026,8 +1028,8 @@ function pinGo(){if(GBUSY||!GS)return;var n=GP,set=GS==='set';
         GBUSY=false;
         if(r.ok){PN[n]={s:salt,h:h};pinDone(n)}
         else if(r.status===409){poll();GS='verify';GPIN='';GPIN2='';GERR='Bu ad üçün PIN artıq təyin olunub. Onu daxil edin.';gate()}
-        else{GERR='PIN yadda saxlanmadı (xəta '+r.status+').';GSKIP=true;gate()}
-      })}).catch(function(){GBUSY=false;GERR='Bağlantı alınmadı.';GSKIP=true;gate()});
+        else{GERR='PIN yadda saxlanmadı (xəta '+r.status+'). Yenidən cəhd edin.';gate()}
+      })}).catch(function(){GBUSY=false;GERR='Bağlantı alınmadı. İnterneti yoxlayıb yenidən cəhd edin.';gate()});
     return}
   var p=PN[n];if(!p){GS='set';GPIN='';GERR='';return gate()}
   if(Date.now()<GLOCK){GERR='Çox səhv cəhd. Bir az gözləyin.';return gate()}
