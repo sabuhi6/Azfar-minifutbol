@@ -746,7 +746,21 @@ function wr(mk){return ensure().then(mk).then(function(r){if(r.ok)return r;retur
   if(r.status===401||/jwt/i.test(e.msg)){if(!SES){alert('Sessiyanın vaxtı bitib. Yenidən daxil olun.');T=1;render();throw e}return refresh().then(function(){if(!SES){alert('Sessiyanın vaxtı bitib. Yenidən daxil olun.');T=1;render();throw e}return mk()}).then(function(r2){if(r2.ok)return r2;return errMsg(r2).then(function(e2){alert('Yadda saxlamaq alınmadı ('+r2.status+'): '+e2.msg);throw e2})})}
   if(r.status===409&&!wr.oc){wr.oc=true;return mk().then(function(r2){if(r2.ok)return r2;return errMsg(r2).then(function(e2){alert('Yadda saxlamaq alınmadı ('+r2.status+'): '+e2.msg);throw e2})})}
   alert('Yadda saxlamaq alınmadı ('+r.status+'): '+e.msg+(r.status===403||/row-level security/i.test(e.msg)?'\n\nBazada bu əməliyyata icazə yoxdur (RLS).':''));throw e})})}
-function poll(){ensure().then(function(){subs.forEach(function(s){fetch(CFG.url+'/rest/v1/items?col=eq.'+s[0]+'&select=id,data',{headers:H()}).then(function(r){return r.json()}).then(function(rows){if(!Array.isArray(rows))return;s[1]({docs:rows.map(function(r){return{id:r.id,data:function(){return r.data}}})})}).catch(function(){})})})}
+/* yenilənmə: səslər artımlı, qalanları seyrək; səhifə gizlidirsə sorğu yoxdur */
+var PSIG={},VROWS={},VMAX=0,PTICK=0;
+function emit(col,rows){var r=rows.slice().sort(function(a,b){return a.id<b.id?-1:a.id>b.id?1:0}),sig=JSON.stringify(r);
+  if(PSIG[col]===sig)return;PSIG[col]=sig;
+  subs.forEach(function(s){if(s[0]===col)s[1]({docs:r.map(function(x){return{id:x.id,data:function(){return Object.assign({},x.data)}}})})})}
+function getRows(col,extra){return fetch(CFG.url+'/rest/v1/items?col=eq.'+col+'&select=id,data'+(extra||''),{headers:H()}).then(function(r){return r.json()})}
+function pollVotes(inc){var ex=inc&&VMAX?'&'+encodeURIComponent('data->>t')+'=gt.'+Math.max(0,VMAX-600000):'';
+  return getRows('votes',ex).then(function(rows){if(!Array.isArray(rows))return;
+    var m=inc&&VMAX?VROWS:{},mx=inc&&VMAX?VMAX:0;
+    rows.forEach(function(r){m[r.id]=r;var t=r.data&&+r.data.t||0;if(t>mx)mx=t});
+    VROWS=m;VMAX=mx;emit('votes',Object.keys(m).map(function(k){return m[k]}))}).catch(function(){})}
+function pollVotesNow(){PSIG.votes='';pollVotes(true)}
+function poll(){ensure().then(function(){var seen={};subs.forEach(function(s){if(seen[s[0]])return;seen[s[0]]=1;
+  if(s[0]==='votes')pollVotes(false);else getRows(s[0]).then(function(rows){if(Array.isArray(rows))emit(s[0],rows)}).catch(function(){})})})}
+function pollTick(){if(document.hidden)return;PTICK++;if(PTICK%6===0)poll();else ensure().then(function(){pollVotes(true)})}
 function mkDb(){return{collection:function(c){return{
   doc:function(id){return{
     set:function(d){return wr(function(){return fetch(CFG.url+'/rest/v1/items'+(wr.oc?'?on_conflict=col,id':''),{method:'POST',headers:H({Prefer:'resolution=merge-duplicates'}),body:JSON.stringify({col:c,id:id,data:d})})}).then(poll)},
@@ -759,7 +773,8 @@ function init(){
   db.collection('matches').onSnapshot(function(q){var all=q.docs.map(function(d){var x=d.data();x.id=d.id;return x});linkResults(all);NX=all.filter(function(x){return x.up&&x.status!=='done'}).sort(function(a,b){return(b.t||0)-(a.t||0)});PX=all.filter(function(x){return x.up&&x.status==='done'}).sort(function(a,b){return a.date<b.date?1:a.date>b.date?-1:(b.t||0)-(a.t||0)});S.matches=all.filter(function(x){return!x.up}).sort(function(a,b){return a.date<b.date?1:a.date>b.date?-1:(b.t||0)-(a.t||0)});MLOAD=true;snapR()});
   db.collection('votes').onSnapshot(function(q){VT=q.docs.map(function(d){var x=d.data();return{id:d.id,m:x.m,r:x.r,v:x.v,k:x.k,g:x.g,t:x.t||0}});VLOAD=true;snapR()});
   db.collection('pins').onSnapshot(function(q){var m={};q.docs.forEach(function(d){var x=d.data();if(x&&x.n&&x.h)m[x.n]={s:x.s||'',h:x.h}});PN=m;PNLOAD=true;snapR()});
-  poll();setInterval(poll,8000);loadPh();setInterval(loadPh,60000);
+  poll();setInterval(pollTick,8000);loadPh();setInterval(function(){if(!document.hidden)loadPh()},60000);setInterval(function(){if(!document.hidden)snapR()},30000);
+  document.addEventListener('visibilitychange',function(){if(!document.hidden){poll();loadPh()}});
 }
 function today(){var d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
 function esc(s){return String(s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
@@ -778,7 +793,9 @@ var VH=24;
 function vopen(m){return m.vote==='open'&&(!m.vend||Date.now()<m.vend)}
 function vclosed(m){return m.vote==='closed'||(m.vote==='open'&&!!m.vend&&Date.now()>=m.vend)}
 function hhmm(ts){var d=new Date(ts),p=function(n){return String(n).padStart(2,'0')};return d.getDate()+' '+MNL[d.getMonth()]+', '+p(d.getHours())+':'+p(d.getMinutes())}
-function winners(m){var c={},mx=0;VT.filter(function(x){return x.m===m.id}).forEach(function(x){c[x.v]=(c[x.v]||0)+1});Object.keys(c).forEach(function(n){if(c[n]>mx)mx=c[n]});return{c:c,mx:mx,w:Object.keys(c).filter(function(n){return c[n]===mx})}}
+/* yalnız oyunun heyətində olanlara verilən (və özünə verilməyən) səslər sayılır */
+function mvpVotes(m){var L=(m.A||[]).concat(m.B||[]);return VT.filter(function(x){return x.m===m.id&&x.v!==x.r&&L.indexOf(x.v)>-1})}
+function winners(m){var c={},mx=0;mvpVotes(m).forEach(function(x){c[x.v]=(c[x.v]||0)+1});Object.keys(c).forEach(function(n){if(c[n]>mx)mx=c[n]});return{c:c,mx:mx,w:Object.keys(c).filter(function(n){return c[n]===mx})}}
 function rr(){if(document.activeElement&&document.activeElement.blur)document.activeElement.blur();render()}
 function setMe(v){ME=v;stSet('mfme',v);VD=null;rr()}
 function setVote(id,st){var m=S.matches.filter(function(x){return x.id===id})[0];if(!m||!DB)return;var d=Object.assign({},m);delete d.id;d.vote=st;if(st==='open'&&VH>0)d.vend=Date.now()+VH*3600000;else delete d.vend;DB.collection('matches').doc(id).set(d)}
@@ -793,7 +810,7 @@ function sendVote(){
   var v=VD,ac=window.AbortController?new AbortController():null,tm=setTimeout(function(){if(ac)ac.abort()},15000);
   fetch(CFG.url+'/rest/v1/items',{method:'POST',headers:H(),signal:ac?ac.signal:undefined,body:JSON.stringify({col:'votes',id:v.mid+'__'+ME,data:{m:v.mid,r:ME,v:v.list[v.pick],t:Date.now()}})}).then(function(r){
     clearTimeout(tm);
-    if(r.ok||r.status===409){if(VD===v)VD=null;rr();poll()}
+    if(r.ok||r.status===409){if(VD===v)VD=null;rr();pollVotesNow()}
     else{v.busy=false;v.ok=false;v.msg='Göndərmək alınmadı (xəta '+r.status+'). '+(r.status===401||r.status===403?'Səs vermək icazəsi verilməyib.':'Yenidən cəhd edin.');rr()}
   }).catch(function(){clearTimeout(tm);v.busy=false;v.ok=false;v.msg='Bağlantı alınmadı. İnterneti yoxlayıb yenidən cəhd edin.';rr()})
 }
@@ -804,7 +821,7 @@ function meBar(){
 }
 function voteBlock(m){
   if(!DB)return'';
-  var all=m.A.concat(m.B),vs=VT.filter(function(x){return x.m===m.id}),h='',mine=vs.filter(function(x){return x.r===ME})[0],w=winners(m);
+  var all=m.A.concat(m.B),vs=mvpVotes(m),h='',mine=vs.filter(function(x){return x.r===ME})[0],w=winners(m);
   if(vclosed(m)){
     if(!vs.length)h+='<div class="rt">Səs verilməyib.</div>';
     else h+='<div class="rt"><b>Oyunun ən yaxşısı: '+w.w.map(esc).join(', ')+'</b> ('+w.mx+' səs)'+Object.keys(w.c).sort(function(x,y){return w.c[y]-w.c[x]}).map(function(n){return'<div class="rrow"><span>'+esc(n)+'</span><b>'+w.c[n]+'</b></div>'}).join('')+'</div>';
@@ -839,14 +856,35 @@ function mapBlock(m){
   return h+'<div class="pitch"><div class="lines"><b class="pa t"></b><b class="ga t"></b><b class="ps t"></b><b class="pr arT"></b><b class="pa b"></b><b class="ga b"></b><b class="ps b"></b><b class="pr arB"></b></div><div class="pt">'+tlogo('A',18)+'Səhra Pişikləri</div>'+half('A',m.lA||[],m.fA,false)+'<div class="mid"><i></i></div>'+half('B',m.lB||[],m.fB,true)+'<div class="pt">'+tlogo('B',18)+'Vəhşi Tırtıllar</div></div>';
 }
 var PP='',PRL=[];
-var PH={};
+var PHC={};try{PHC=JSON.parse(localStorage.getItem('mfph')||'{}')||{}}catch(e){PHC={}}
+var PH={};Object.keys(PHC).forEach(function(k){if(PHC[k]&&typeof PHC[k].img==='string')PH[k]=PHC[k].img});
 function av(n,z){var u=PH[n];return u?'<img class="av" style="width:'+z+'px;height:'+z+'px" src="'+u+'">':'<span class="av ini" style="width:'+z+'px;height:'+z+'px;font-size:'+Math.round(z*.45)+'px">'+esc(n.charAt(0).toUpperCase())+'</span>'}
-function loadPh(){
-  if(!DB)return;
+function phOk(u){return typeof u==='string'&&u.indexOf('data:image/jpeg;base64,')===0}
+function loadPhFull(){
   ensure().then(function(){return fetch(CFG.url+'/rest/v1/items?col=eq.photos&select=id,data',{headers:H()})}).then(function(r){return r.json()}).then(function(rows){
     if(!Array.isArray(rows))return;var o={};
-    rows.forEach(function(r){var u=r.data&&r.data.img;if(typeof u==='string'&&u.indexOf('data:image/jpeg;base64,')===0)o[r.id]=u});
+    rows.forEach(function(r){var u=r.data&&r.data.img;if(phOk(u))o[r.id]=u});
     PH=o;snapR()
+  }).catch(function(){})
+}
+/* şəkillər: yüngül siyahı (id + t) çəkilir, yalnız yeni/dəyişən şəkil yüklənir, qalanı telefonda saxlanır */
+function loadPh(){
+  if(!DB)return;
+  ensure().then(function(){return fetch(CFG.url+'/rest/v1/items?col=eq.photos&select='+encodeURIComponent('id,t:data->>t'),{headers:H()})}).then(function(r){return r.json()}).then(function(rows){
+    if(!Array.isArray(rows))return loadPhFull();
+    var live={},need=[];
+    rows.forEach(function(r){var v=r.t==null?'':String(r.t);live[r.id]=v;var c=PHC[r.id];if(!c||c.t!==v)need.push(r.id)});
+    var gone=Object.keys(PHC).filter(function(k){return!(k in live)});
+    return Promise.all(need.map(function(id){
+      return fetch(CFG.url+'/rest/v1/items?col=eq.photos&id=eq.'+encodeURIComponent(id)+'&select=id,data',{headers:H()}).then(function(r){return r.json()}).then(function(a){
+        var u=Array.isArray(a)&&a[0]&&a[0].data&&a[0].data.img;if(phOk(u))PHC[id]={t:live[id],img:u}}).catch(function(){})
+    })).then(function(){
+      if(!need.length&&!gone.length)return;
+      gone.forEach(function(k){delete PHC[k]});
+      var o={};Object.keys(PHC).forEach(function(k){if(k in live&&phOk(PHC[k].img))o[k]=PHC[k].img});
+      PH=o;try{localStorage.setItem('mfph',JSON.stringify(PHC))}catch(e){}
+      snapR()
+    })
   }).catch(function(){})
 }
 function phCtl(n){return'<div style="margin:6px 0 10px"><label class="btn" style="display:inline-block;padding:7px 12px;font-size:13px">Şəkil yüklə<input type="file" accept="image/*" hidden onchange="upPh(this)"></label>'+(PH[n]?' <button class="ghost" onclick="delPh()">Şəkli sil</button>':'')+'</div>'}
@@ -857,7 +895,7 @@ function upPh(inp){
     var c=document.createElement('canvas'),z=160,sq=Math.min(im.width,im.height);c.width=c.height=z;
     c.getContext('2d').drawImage(im,(im.width-sq)/2,(im.height-sq)/2,sq,sq,0,0,z,z);
     var u=c.toDataURL('image/jpeg',0.8),n=PP;
-    DB.collection('photos').doc(n).set({img:u}).then(function(){PH[n]=u;rr();loadPh()})
+    DB.collection('photos').doc(n).set({img:u,t:Date.now()}).then(function(){PH[n]=u;rr();loadPh()})
   };im.onerror=function(){alert('Şəkil oxunmadı')};im.src=rd.result};
   rd.readAsDataURL(f);inp.value=''
 }
@@ -1099,7 +1137,7 @@ function rsvpSend(n,v){var g=curNext();if(!g||RB)return;RB=true;var gid=g.id,att
     var ac=window.AbortController?new AbortController():null,tm=setTimeout(function(){if(ac)ac.abort()},15000);
     fetch(CFG.url+'/rest/v1/items',{method:'POST',headers:H(),signal:ac?ac.signal:undefined,body:JSON.stringify({col:'votes',id:id,data:rec})}).then(function(r){
       clearTimeout(tm);
-      if(r.ok){RB=false;poll();return}
+      if(r.ok){RB=false;pollVotesNow();return}
       if(r.status===409&&att<3){VT=VT.filter(function(x){return x.id!==id});att++;return go()}
       fail(id,'Göndərmək alınmadı (xəta '+r.status+'). '+(r.status===401||r.status===403?'Cavabı dəyişmək icazəsi verilməyib.':'Yenidən cəhd edin.'))
     }).catch(function(){clearTimeout(tm);fail(id,'Bağlantı alınmadı. İnterneti yoxlayın.')})
@@ -1233,7 +1271,7 @@ function renamePlayer(){
   var mj=[],done=[],side=[],sf=0;
   NX.concat(PX,S.matches).forEach(function(x){var d=rnMatch(x,o,n);if(d){var orig=Object.assign({},x);delete orig.id;mj.push({id:x.id,d:d,orig:orig})}});
   VT.forEach(function(v){if(v.r!==o&&v.v!==o)return;var d=v.k==='rsvp'?{k:'rsvp',g:v.g,r:v.r===o?n:v.r,v:v.v,t:v.t}:{m:v.m,r:v.r===o?n:v.r,v:v.v===o?n:v.v,t:v.t};side.push(function(){return rnUpsert('votes',v.id,d)})});
-  if(PH[o]){var img=PH[o];side.push(function(){return rnUpsert('photos',n,{img:img}).then(function(){return rnDel('photos',o)})})}
+  if(PH[o]){var img=PH[o];side.push(function(){return rnUpsert('photos',n,{img:img,t:Date.now()}).then(function(){return rnDel('photos',o)})})}
   if(PN[o]){var pr=PN[o];side.push(function(){return rnUpsert('pins','pin__'+n,{n:n,s:pr.s,h:pr.h,t:Date.now()}).then(function(){return rnDel('pins','pin__'+o)})})}
   function seq(l,f){return l.reduce(function(p,x){return p.then(function(){return f(x)})},Promise.resolve())}
   // 1) oyunlar (vacib): biri alınmasa, dəyişənləri geri qaytar
@@ -1303,7 +1341,7 @@ var DEEP=(location.hash.match(/^#mvp-(.+)$/)||[])[1]||null;if(DEEP){try{DEEP=dec
 function mvpWa(m){if(!DB||!(vopen(m)||(vclosed(m)&&winners(m).mx>0)))return'';return'<button class="btn full wa mvwa" onclick="mvpShare(\''+m.id+'\')">'+(vopen(m)?'Səsverməni WhatsApp-da paylaş':'Nəticəni WhatsApp-da paylaş')+'</button>'}
 function mvpShare(id){var m=S.matches.filter(function(x){return x.id===id})[0];if(!m)return;
   var link=siteUrl()+'#mvp-'+encodeURIComponent(m.id),when='📅 '+wday(m.date)+', '+dm(m.date)+(m.h?' · '+m.h:''),sc='⚽ Səhra Pişikləri '+m.a+' : '+m.b+' Vəhşi Tırtıllar',t;
-  if(vopen(m)){var vs=VT.filter(function(x){return x.m===m.id}).length,all=m.A.length+m.B.length;
+  if(vopen(m)){var vs=mvpVotes(m).length,all=m.A.length+m.B.length;
     t='⭐ Oyunun ən yaxşısını seçək!\n'+when+'\n'+sc+'\n\nKim ən yaxşı oynadı? Burada səs ver 👉 '+link+'\n🗳️ '+vs+' / '+all+' nəfər səs verib'+(m.vend?'\n⏳ Səsvermə bitir: '+hhmm(m.vend):'')}
   else{var w=winners(m),rk=Object.keys(w.c).sort(function(a,b){return w.c[b]-w.c[a]||a.localeCompare(b)});
     t='🏆 Oyunun ən yaxşısı: '+w.w.join(', ')+' ('+w.mx+' səs)\n'+when+'\n'+sc+'\n\n'+rk.map(function(n,i){return(i+1)+'. '+n+' — '+w.c[n]+' səs'}).join('\n')+'\n\n'+link}
