@@ -708,6 +708,22 @@ select{font-size:14px}
 /* iPhone-da yazanda böyütməsin deyə inputlar 16px qalır */
 input{font-size:16px}
 .score input{font-size:30px;width:64px}
+
+.tbw{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.stt{border-collapse:separate;border-spacing:0;width:100%;font-size:13px;font-variant-numeric:tabular-nums}
+.stt th,.stt td{padding:9px 7px;text-align:center;white-space:nowrap;border-top:1px solid var(--line)}
+.stt thead th{border-top:0;padding:0;color:var(--mute)}
+.stt thead button{all:unset;cursor:pointer;display:block;width:100%;box-sizing:border-box;padding:11px 7px;font:600 12px system-ui,sans-serif;color:var(--mute);text-align:center}
+.stt thead button.on{color:var(--g)}
+.stt thead button.on::after{content:" ▾"}
+.stt thead .tnw{padding:11px 0;font:600 12px system-ui,sans-serif;color:var(--mute)}
+.stt td.on{font-weight:700;color:var(--ink)}
+.stt .tn{position:sticky;left:0;z-index:1;background:var(--card);text-align:left;min-width:158px;padding-left:12px;box-shadow:1px 0 0 var(--line)}
+.stt .tnw{display:flex;align-items:center;gap:8px}
+.stt .rk{min-width:16px;text-align:center;color:var(--mute);font-weight:600}
+.stt .nm{overflow:hidden;text-overflow:ellipsis;max-width:104px}
+.stt tbody tr{cursor:pointer}
+.stt tbody tr:active td{background:var(--bg)}
 </style>
 </head>
 <body>
@@ -916,7 +932,7 @@ function profile(n){
   function bx(v,t){return'<div><b>'+v+'</b><small>'+t+'</small></div>'}
   return'<button class="ghost" onclick="closeP()">← Statistika</button><div class="card"><div class="phead">'+av(n,88)+'<div><h2>'+esc(n)+'</h2>'+(adm()?phCtl(n):'')+'</div></div><div class="pgrid">'+bx(ms.length,'Oyun')+bx(w,'Qələbə')+bx(d,'Bərabərlik')+bx(l,'Məğlubiyyət')+bx(p+'%','Qələbə %')+bx(g,'Qapıçı')+bx(bst,'Ən yaxşı ★')+bx(gs,'Qol')+bx(asx,'Ötürmə')+'</div>'+(form.length?'<div class="form">Son oyunlar: '+form.map(function(r){return'<b class="res '+r+'">'+r+'</b>'}).join('')+'</div>':'')+'</div><div class="card"><h2>Oyunlar</h2>'+(list||'<p class="empty">Oyun yoxdur.</p>')+'</div>';
 }
-var EL=[],SK='w';
+var EL=[],SK='w',SC='w';
 function mkEv(e,ok){var o={};Object.keys(e||{}).forEach(function(n){var x=e[n];if(ok.indexOf(n)>-1&&((x[0]||0)||(x[1]||0)))o[n]=[x[0]||0,x[1]||0]});return o}
 function evd(i,k,d){var n=EL[i];D.ev=D.ev||{};var x=D.ev[n]||[0,0];x[k]=Math.max(0,(x[k]||0)+d);D.ev[n]=x;rr()}
 function evForm(){
@@ -1010,7 +1026,7 @@ function periodBar(){var ys={},ms={};S.matches.forEach(function(m){var d=m.date|
   var Y=Object.keys(ys).sort().reverse(),M=Object.keys(ms).sort(),MN=['Yanvar','Fevral','Mart','Aprel','May','İyun','İyul','Avqust','Sentyabr','Oktyabr','Noyabr','Dekabr'];
   if(PY&&!ys[PY]){PY='';PM='';PER='all'}
   return'<div class="chips per"><small class="lb">Dövr</small><button class="chip'+(!PY?' A':'')+'" onclick="setPer(\'\',\'\')">Hamısı</button><select class="psel'+(PY?' on':'')+'" aria-label="İl" onchange="setPer(this.value,\'\')"><option value="">İl</option>'+Y.map(function(y){return'<option'+(y===PY?' selected':'')+'>'+y+'</option>'}).join('')+'</select><select class="psel'+(PM?' on':'')+'" aria-label="Ay" '+(PY?'':'disabled ')+'onchange="setPer(PY,this.value)"><option value="">'+(PY?'Bütün il':'Ay')+'</option>'+M.map(function(k){return'<option value="'+k+'"'+(k===PM?' selected':'')+'>'+MN[+k-1]+'</option>'}).join('')+'</select></div>'}
-function sortBar(){return'<div class="chips"><small class="lb">Sıralama</small>'+[['w','Qələbə'],['g','Qol'],['a','Ötürmə']].map(function(o){return'<button class="chip'+(SK===o[0]?' A':'')+'" onclick="SK=\''+o[0]+'\';rr()">'+o[1]+'</button>'}).join('')+'</div>'}
+function sortBar(){return'<div class="chips"><small class="lb">Sıralama</small>'+[['w','Ümumi'],['g','Qol'],['a','Ötürmə']].map(function(o){return'<button class="chip'+(SK===o[0]?' A':'')+'" onclick="SK=\''+o[0]+'\';rr()">'+o[1]+'</button>'}).join('')+'</div>'}
 function vidBtn(m){return /^https:\/\/(t|telegram)\.me\//.test(m.vid||'')?'<a class="btn full" style="display:block;text-align:center;text-decoration:none" href="'+esc(m.vid)+'" target="_blank" rel="noopener">Çəkilişə bax</a>':''}
 function stOpts(){var u={};S.matches.forEach(function(m){if(m.st)u[m.st]=1});return Object.keys(u).map(function(k){return'<option value="'+esc(k)+'">'}).join('')}
 function gkSel(t){var l=SG().filter(function(n){return D.sel[n]===t}).concat((t==='A'?D.keepA:D.keepB)||[]);var v=t==='A'?D.gkA:D.gkB;return '<select onchange="D.gk'+t+'=this.value"><option value="">—</option>'+l.map(function(n){return'<option'+(n===v?' selected':'')+' value="'+esc(n)+'">'+esc(n)+'</option>'}).join('')+'</select>'}
@@ -1208,15 +1224,23 @@ function countUp(){var v=document.getElementById('v3'),k=PP?'':(PER+'|'+SK);if(P
   var els=[].slice.call(v.querySelectorAll('[data-n]')),t0=performance.now(),D=750;
   els.forEach(function(e){e.textContent='0'});
   (function f(t){var x=Math.min(1,(t-t0)/D),e2=1-Math.pow(1-x,3);els.forEach(function(e){if(!e.isConnected)return;e.textContent=Math.round(+e.getAttribute('data-n')*e2)});if(x<1)requestAnimationFrame(f)})(t0)}
+/* ümumi statistika cədvəli: bütün göstəricilər bir yerdə, başlığa toxunub sırala */
+var SCOLS=[['p','O','oyun'],['w','Q','qələbə'],['d','B','bərabərlik'],['l','M','məğlubiyyət'],['pc','%','qələbə faizi'],['g','⚽','qol'],['a',BOOT,'ötürmə'],['m','<span class="star">★</span>','ən yaxşı'],['k','GK','qapıçı']];
+var CL={p:'oyun',w:'qələbə',d:'bərabərlik',l:'məğlubiyyət',pc:'% qələbə',g:'qol',a:'ötürmə',m:'ən yaxşı',k:'qapıçı'};
+function cv(c,n,st,gl,as,bc){var r=st[n];return c==='p'?r.p:c==='w'?r.w:c==='d'?r.d:c==='l'?r.l:c==='pc'?Math.round(r.w/r.p*100):c==='g'?(gl[n]||0):c==='a'?(as[n]||0):c==='m'?(bc[n]||0):(r.g||0)}
+function statTable(rows,st,bc,gl,as){
+  return'<div class="card list sl tbw"><table class="stt"><thead><tr><th class="tn"><span class="tnw">Oyunçu</span></th>'+SCOLS.map(function(c){return'<th><button title="'+c[2]+'" aria-label="'+c[2]+' üzrə sırala" class="'+(SC===c[0]?'on':'')+'" onclick="SC=\''+c[0]+'\';rr()">'+c[1]+'</button></th>'}).join('')+'</tr></thead><tbody>'
+  +rows.map(function(n,k){return'<tr onclick="openP('+PRL.indexOf(n)+')"><td class="tn"><span class="tnw"><span class="rk">'+(k+1)+'</span>'+av(n,26)+'<span class="nm">'+esc(n)+'</span></span></td>'
+    +SCOLS.map(function(c){var v=cv(c[0],n,st,gl,as,bc),z=(c[0]==='g'||c[0]==='a'||c[0]==='m'||c[0]==='k')&&!v;return'<td'+(SC===c[0]?' class="on"':'')+'>'+(z?'–':(c[0]==='pc'?v+'%':v))+'</td>'}).join('')+'</tr>'}).join('')+'</tbody></table></div>'}
 function statView(rows,st,bc,gl,as){
-  function mv(n){return SK==='g'?(gl[n]||0):SK==='a'?(as[n]||0):st[n].w}
-  var ml=SK==='g'?'qol':SK==='a'?'ötürmə':'qələbə';
+  function mv(n){return SK==='g'?(gl[n]||0):SK==='a'?(as[n]||0):cv(SC,n,st,gl,as,bc)}
+  var ml=SK==='g'?'qol':SK==='a'?'ötürmə':CL[SC];
   var h='';
   if(rows.length>=2){var top=rows.slice(0,3),ord=top.length===3?[1,0,2]:[1,0].filter(function(i){return i<top.length});
     h+='<div class="podium">'+ord.map(function(i){var n=top[i];return'<button class="pod p'+(i+1)+'" onclick="openP('+PRL.indexOf(n)+')"><span class="pav">'+av(n,i===0?60:48)+'<i>'+(i+1)+'</i></span><span class="pn">'+esc(n)+'</span><span class="pv"><span data-n="'+mv(n)+'">'+mv(n)+'</span> <small>'+ml+'</small></span><span class="pb"></span></button>'}).join('')+'</div>'}
-  h+='<div class="card list sl">'+rows.map(function(n,k){var r=st[n],pc=Math.round(r.w/r.p*100);
+  h+=SK==='w'?statTable(rows,st,bc,gl,as):'<div class="card list sl">'+rows.map(function(n,k){var r=st[n],pc=Math.round(r.w/r.p*100);
     return'<button class="srow" onclick="openP('+PRL.indexOf(n)+')"><span class="rk">'+(k+1)+'</span>'+av(n,36)+'<span class="sm"><span class="sn">'+esc(n)+'</span><span class="ss">'+r.p+' oyun · '+r.w+'Q '+r.d+'B '+r.l+'M</span>'+(function(){var x=[];if(r.g)x.push('GK '+r.g);if(gl[n]||as[n])x.push('⚽ '+(gl[n]||0),BOOT+' '+(as[n]||0));if(bc[n])x.push('<span class="star">★</span> '+bc[n]);return x.length?'<span class="ss">'+x.join(' · ')+'</span>':''})()+'<span class="bar"><b style="width:'+pc+'%"></b></span></span><span class="sv"><b data-n="'+mv(n)+'">'+mv(n)+'</b><small>'+ml+'</small><em><span data-n="'+pc+'">'+pc+'</span>%</em></span></button>'}).join('')+'</div>';
-  h+='<div class="hlp"><button class="ghost" onclick="HELP=!HELP;rr()" aria-expanded="'+HELP+'"><span class="q">?</span> İşarələr nə deməkdir</button>'+(HELP?'<p class="empty">Q – qələbə, B – bərabərlik, M – məğlubiyyət. GK – qapıçı olduğu oyun sayı. ⚽ – qol, '+BOOT+' – ötürmə. <span class="star">★</span> – oyunun ən yaxşısı seçilmə sayı. Yaşıl zolaq və faiz – qələbə faizi. Ətraflı görmək üçün oyunçuya toxunun.</p>':'')+'</div>';
+  h+='<div class="hlp"><button class="ghost" onclick="HELP=!HELP;rr()" aria-expanded="'+HELP+'"><span class="q">?</span> İşarələr nə deməkdir</button>'+(HELP?'<p class="empty">O – oyun sayı, Q – qələbə, B – bərabərlik, M – məğlubiyyət. GK – qapıçı olduğu oyun sayı. ⚽ – qol, '+BOOT+' – ötürmə. <span class="star">★</span> – oyunun ən yaxşısı seçilmə sayı. % – qələbə faizi. Ümumi cədvəldə sütun başlığına toxunub sıralamanı dəyişin. Ətraflı görmək üçün oyunçuya toxunun.</p>':'')+'</div>';
   return h}
 function render(){autoTab();gate();hdr();renderVote();document.getElementById('fab').textContent=T===1?'×':(adm()?'+':'⚙');
   if(T===1&&!adm()){if(!document.getElementById('le'))document.getElementById('v1').innerHTML='<div class="card"><h2>Admin girişi</h2><p class="empty">Oyun əlavə etmək və düzəltmək üçün daxil olun.</p><input id="le" type="text" placeholder="İstifadəçi adı" autocapitalize="off" autocomplete="username" style="width:100%"><input id="lp" type="password" placeholder="Parol" style="width:100%;margin-top:8px" onkeydown="if(event.key===\'Enter\')login()"><button class="btn full" onclick="login()">Daxil ol</button></div>'}
@@ -1242,7 +1266,7 @@ function render(){autoTab();gate();hdr();renderVote();document.getElementById('f
     MS.forEach(function(m){[['A',m.a,m.b],['B',m.b,m.a]].forEach(function(s){(m[s[0]]).forEach(function(n){if(isG(n))return;var r=st[n]=st[n]||{p:0,w:0,d:0,l:0};r.p++;if(n===m['gk'+s[0]])r.g=(r.g||0)+1;if(s[1]>s[2])r.w++;else if(s[1]===s[2])r.d++;else r.l++})})});
     var bc={};MS.forEach(function(m){if(vclosed(m))winners(m).w.forEach(function(n){bc[n]=(bc[n]||0)+1})});
     var gl={},as={};MS.forEach(function(m){Object.keys(m.ev||{}).forEach(function(n){gl[n]=(gl[n]||0)+(m.ev[n][0]||0);as[n]=(as[n]||0)+(m.ev[n][1]||0)})});
-    var rows=Object.keys(st).sort(function(x,y){if(SK==='g')return(gl[y]||0)-(gl[x]||0)||st[y].w-st[x].w;if(SK==='a')return(as[y]||0)-(as[x]||0)||st[y].w-st[x].w;return st[y].w-st[x].w||st[y].p-st[x].p});
+    var rows=Object.keys(st).sort(function(x,y){if(SK==='w')return cv(SC,y,st,gl,as,bc)-cv(SC,x,st,gl,as,bc)||st[y].w-st[x].w||st[y].p-st[x].p;if(SK==='g')return(gl[y]||0)-(gl[x]||0)||st[y].w-st[x].w;if(SK==='a')return(as[y]||0)-(as[x]||0)||st[y].w-st[x].w;return st[y].w-st[x].w||st[y].p-st[x].p});
     PRL=rows;document.getElementById('v3').innerHTML=PP&&rows.indexOf(PP)>-1?profile(PP):(periodBar()+(rows.length?sortBar()+statView(rows,st,bc,gl,as):(loading()?skel(6,1):'<p class="empty">'+(S.matches.length?'Bu dövrdə oyun yoxdur.':'Statistika ilk oyundan sonra görünəcək.')+'</p>')));
     countUp();
   }
